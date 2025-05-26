@@ -59,6 +59,12 @@
             border-color: #34a853;
         }
 
+        .google-auth-section.disabled {
+            background: #f5f5f5;
+            border-color: #ccc;
+            opacity: 0.6;
+        }
+
         .auth-button {
             background: #4285f4;
             color: white;
@@ -76,6 +82,12 @@
         .auth-button:hover {
             background: #3367d6;
             transform: translateY(-2px);
+        }
+
+        .auth-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .auth-button.connected {
@@ -429,12 +441,18 @@
             gap: 8px;
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(78, 84, 200, 0.3);
         }
@@ -444,7 +462,7 @@
             color: white;
         }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(72, 187, 120, 0.3);
         }
@@ -454,7 +472,7 @@
             color: white;
         }
 
-        .btn-warning:hover {
+        .btn-warning:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(237, 137, 54, 0.3);
         }
@@ -601,13 +619,6 @@
             color: #4e54c8;
         }
 
-        .document-viewer {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 10px;
-        }
-
         .image-viewer {
             max-width: 100%;
             max-height: 100%;
@@ -648,70 +659,6 @@
             font-size: 0.9rem;
         }
 
-        .google-drive-files {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            margin: 10px 0;
-        }
-
-        .drive-file-item {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: background 0.3s ease;
-        }
-
-        .drive-file-item:hover {
-            background: #f8f9ff;
-        }
-
-        .drive-file-item:last-child {
-            border-bottom: none;
-        }
-
-        .drive-file-icon {
-            width: 32px;
-            height: 32px;
-            background: #4285f4;
-            color: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .drive-file-info {
-            flex: 1;
-        }
-
-        .drive-file-name {
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 2px;
-        }
-
-        .drive-file-details {
-            font-size: 0.8rem;
-            color: #718096;
-        }
-
-        .drive-select-btn {
-            background: #34a853;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-
         .google-status {
             padding: 10px;
             border-radius: 8px;
@@ -731,9 +678,6 @@
             border: 1px solid #f56565;
         }
     </style>
-    <!-- Google APIs -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
     <div class="container">
@@ -744,15 +688,12 @@
 
         <div class="main-content">
             <!-- Google Authentication Section -->
-            <div class="google-auth-section" id="googleAuthSection">
+            <div class="google-auth-section disabled" id="googleAuthSection">
                 <h3 style="margin-bottom: 15px; color: #2d3748;">🔐 Google Drive Integration</h3>
                 <div id="googleAuthStatus">
-                    <p style="margin-bottom: 15px; color: #4a5568;">Connect your Google account to access Drive files directly</p>
-                    <button class="auth-button" id="authorizeButton" onclick="handleAuthClick()">
-                        🔗 Connect Google Account
-                    </button>
-                    <button class="auth-button" id="signoutButton" onclick="handleSignoutClick()" style="display: none; background: #ea4335;">
-                        🔓 Disconnect
+                    <p style="margin-bottom: 15px; color: #4a5568;">Google Drive integration is loading...</p>
+                    <button class="auth-button" id="authorizeButton" disabled>
+                        🔗 Loading...
                     </button>
                 </div>
                 <div id="googleStatus" class="google-status" style="display: none;"></div>
@@ -801,7 +742,7 @@
             </div>
 
             <!-- Progress Summary -->
-            <div class="progress-summary" id="progressSummary" style="display: none;">
+            <div class="progress-summary" id="progressSummary">
                 <div class="progress-item">
                     <div class="progress-number uploaded" id="uploadedCount">0</div>
                     <div class="progress-label">Uploaded</div>
@@ -817,7 +758,7 @@
             </div>
 
             <!-- Main Workflow -->
-            <div class="workflow-container" id="workflowContainer" style="display: none;">
+            <div class="workflow-container" id="workflowContainer">
                 <!-- Upload Section -->
                 <div class="upload-section">
                     <div class="section-header">
@@ -839,19 +780,9 @@
                         <button class="btn btn-secondary" onclick="document.getElementById('folderInput').click()">
                             📁 Select Folder
                         </button>
-                        <button class="btn btn-primary" id="googleDriveButton" onclick="openGoogleDrivePicker()" disabled>
-                            ☁️ Google Drive
+                        <button class="btn btn-primary" id="googleDriveButton" disabled>
+                            ☁️ Google Drive (Loading...)
                         </button>
-                    </div>
-
-                    <!-- Google Drive File Browser -->
-                    <div id="googleDriveFiles" class="google-drive-files" style="display: none;">
-                        <div style="padding: 15px; background: #f8f9ff; border-bottom: 2px solid #e2e8f0; font-weight: 600;">
-                            📁 Google Drive Files
-                        </div>
-                        <div id="driveFilesList">
-                            <!-- Google Drive files will appear here -->
-                        </div>
                     </div>
 
                     <div class="uploaded-files" id="uploadedFiles">
@@ -862,7 +793,7 @@
                 <!-- Checklist Section -->
                 <div class="checklist-section">
                     <div class="section-header">
-                        ✅ Document Checklist - <span id="checklistTitle">Select Company Type</span>
+                        ✅ Document Checklist - <span id="checklistTitle">Private Limited</span>
                     </div>
                     <div class="checklist-content" id="checklistContent">
                         <!-- Checklist will be generated here -->
@@ -871,7 +802,7 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="action-buttons" id="actionButtons" style="display: none;">
+            <div class="action-buttons" id="actionButtons">
                 <button class="btn btn-secondary" onclick="autoMatchDocuments()">
                     🤖 AI Auto-Match
                 </button>
@@ -908,45 +839,13 @@
     </div>
 
     <script>
-        // Core Application - Simple and Clean
+        console.log('🚀 Starting Loan Document Management System...');
+        
+        // Core Application Variables - Initialize immediately
         let selectedCompanyType = 'private-limited';
         let uploadedFiles = new Map();
         let documentAssignments = new Map();
         let checklistItems = [];
-        
-        // Google Drive variables (optional)
-        let googleApiAvailable = false;
-        
-        // FIXED: Added missing Google API configuration variables
-        let API_KEY = ''; // To be configured by user if they want Google Drive
-        let CLIENT_ID = ''; // To be configured by user if they want Google Drive  
-        let DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-        let SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
-        
-        // FIXED: Added missing Google API state variables
-        let tokenClient = null;
-        let gapiInited = false;
-        let gisInited = false;
-        let isAuthorized = false;
-
-        // FIXED: Added missing utility functions
-        function safeExecute(callback) {
-            try {
-                return callback();
-            } catch (error) {
-                console.error('Safe execution error:', error);
-                return null;
-            }
-        }
-
-        function safeGetElement(id) {
-            try {
-                return document.getElementById(id);
-            } catch (error) {
-                console.error(`Error getting element ${id}:`, error);
-                return null;
-            }
-        }
 
         // Document requirements for different company types
         const documentRequirements = {
@@ -1043,367 +942,30 @@
             'shareholder': /shareholder|shareholding.*pattern/i
         };
 
-        // Google Drive Integration Functions (Optional Feature)
-        function gapiLoaded() {
-            try {
-                if (typeof gapi === 'undefined') {
-                    console.warn('Google API not available');
-                    disableGoogleDriveIntegration();
-                    return;
-                }
-                gapi.load('client', initializeGapiClient);
-            } catch (error) {
-                console.warn('Error loading GAPI:', error);
-                disableGoogleDriveIntegration();
-            }
-        }
-
-        async function initializeGapiClient() {
-            try {
-                await gapi.client.init({
-                    apiKey: API_KEY,
-                    discoveryDocs: [DISCOVERY_DOC],
-                });
-                gapiInited = true;
-                googleApiAvailable = true;
-                maybeEnableButtons();
-            } catch (error) {
-                console.warn('Error initializing GAPI client:', error);
-                disableGoogleDriveIntegration();
-            }
-        }
-
-        function gisLoaded() {
-            try {
-                if (typeof google === 'undefined') {
-                    console.warn('Google Identity not available');
-                    disableGoogleDriveIntegration();
-                    return;
-                }
-                
-                tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: CLIENT_ID,
-                    scope: SCOPES,
-                    callback: (response) => {
-                        if (response.error) {
-                            console.error('OAuth error:', response.error);
-                            showGoogleStatus('Authentication failed. Please try again.', 'error');
-                            return;
-                        }
-                        isAuthorized = true;
-                        updateAuthUI();
-                        showGoogleStatus('Successfully connected to Google Drive!', 'success');
-                    }
-                });
-                gisInited = true;
-                googleApiAvailable = true;
-                maybeEnableButtons();
-            } catch (error) {
-                console.warn('Error initializing GIS:', error);
-                disableGoogleDriveIntegration();
-            }
-        }
-
-        function disableGoogleDriveIntegration() {
-            googleApiAvailable = false;
-            const googleDriveButton = safeGetElement('googleDriveButton');
-            const googleAuthSection = safeGetElement('googleAuthSection');
-            
-            if (googleDriveButton) {
-                googleDriveButton.disabled = true;
-                googleDriveButton.innerHTML = '☁️ Google Drive (Unavailable)';
-                googleDriveButton.title = 'Google Drive integration is not available';
-            }
-            
-            if (googleAuthSection) {
-                googleAuthSection.style.display = 'none';
-            }
-            
-            console.info('Google Drive integration disabled - app will work without it');
-        }
-
-        function maybeEnableButtons() {
-            if (googleApiAvailable && gapiInited && gisInited) {
-                const googleDriveButton = safeGetElement('googleDriveButton');
-                if (googleDriveButton) {
-                    googleDriveButton.disabled = false;
-                    googleDriveButton.innerHTML = '☁️ Google Drive';
-                }
-            }
-        }
-
-        function handleAuthClick() {
-            if (!googleApiAvailable) {
-                alert('Google Drive integration is not available. Please use local file upload instead.');
-                return;
-            }
-            
-            if (!tokenClient) {
-                showGoogleStatus('Google authentication not initialized.', 'error');
-                return;
-            }
-            
-            try {
-                if (gapi.client.getToken() === null) {
-                    tokenClient.requestAccessToken({prompt: 'consent'});
-                } else {
-                    tokenClient.requestAccessToken({prompt: ''});
-                }
-            } catch (error) {
-                console.error('Error during authentication:', error);
-                showGoogleStatus('Authentication failed. Please try again.', 'error');
-            }
-        }
-
-        function handleSignoutClick() {
-            if (!googleApiAvailable) return;
-            
-            try {
-                const token = gapi.client.getToken();
-                if (token !== null) {
-                    google.accounts.oauth2.revoke(token.access_token);
-                    gapi.client.setToken('');
-                    isAuthorized = false;
-                    updateAuthUI();
-                    showGoogleStatus('Disconnected from Google Drive.', 'success');
-                    const googleDriveFiles = safeGetElement('googleDriveFiles');
-                    if (googleDriveFiles) {
-                        googleDriveFiles.style.display = 'none';
-                    }
-                }
-            } catch (error) {
-                console.error('Error during signout:', error);
-                showGoogleStatus('Error disconnecting from Google Drive.', 'error');
-            }
-        }
-
-        function updateAuthUI() {
-            const authSection = safeGetElement('googleAuthSection');
-            const authorizeButton = safeGetElement('authorizeButton');
-            const signoutButton = safeGetElement('signoutButton');
-            
-            if (isAuthorized) {
-                if (authSection) authSection.classList.add('connected');
-                if (authorizeButton) authorizeButton.style.display = 'none';
-                if (signoutButton) {
-                    signoutButton.style.display = 'inline-flex';
-                    signoutButton.classList.add('connected');
-                }
-            } else {
-                if (authSection) authSection.classList.remove('connected');
-                if (authorizeButton) authorizeButton.style.display = 'inline-flex';
-                if (signoutButton) signoutButton.style.display = 'none';
-            }
-        }
-
-        function showGoogleStatus(message, type) {
-            const statusDiv = safeGetElement('googleStatus');
-            if (statusDiv) {
-                statusDiv.textContent = message;
-                statusDiv.className = `google-status ${type}`;
-                statusDiv.style.display = 'block';
-                
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 5000);
-            }
-        }
-
-        function openGoogleDrivePicker() {
-            safeExecute(async () => {
-                if (!googleApiAvailable) {
-                    alert('Google Drive integration is not available.\n\nPlease use:\n• Select Files button\n• Select Folder button\n• Drag & drop files directly');
-                    return;
-                }
-                
-                if (!isAuthorized) {
-                    alert('Please connect your Google account first.');
-                    return;
-                }
-
-                const response = await gapi.client.drive.files.list({
-                    pageSize: 100,
-                    fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime, parents)',
-                    q: "(mimeType='application/pdf' or mimeType contains 'image/' or mimeType contains 'document' or mimeType='application/vnd.google-apps.folder') and trashed=false"
-                });
-
-                const files = response.result.files;
-                if (!files || files.length === 0) {
-                    showGoogleStatus('No documents found in your Google Drive.', 'error');
-                    return;
-                }
-
-                displayGoogleDriveFiles(files);
-            });
-        }
-
-        function displayGoogleDriveFiles(files) {
-            safeExecute(() => {
-                const driveFilesContainer = safeGetElement('googleDriveFiles');
-                const driveFilesList = safeGetElement('driveFilesList');
-                
-                if (!driveFilesList) return;
-                
-                driveFilesList.innerHTML = '';
-                
-                files.forEach(file => {
-                    const fileElement = document.createElement('div');
-                    fileElement.className = 'drive-file-item';
-                    
-                    const mimeType = file.mimeType || '';
-                    const isFolder = mimeType === 'application/vnd.google-apps.folder';
-                    const fileExtension = isFolder ? 'DIR' : getFileExtension(file.name, mimeType);
-                    const fileSize = file.size ? formatFileSize(file.size) : (isFolder ? 'Folder' : 'Unknown size');
-                    
-                    fileElement.innerHTML = `
-                        <div class="drive-file-icon" style="${isFolder ? 'background: #ffa500;' : ''}">${fileExtension}</div>
-                        <div class="drive-file-info">
-                            <div class="drive-file-name">${file.name}</div>
-                            <div class="drive-file-details">${fileSize} • ${new Date(file.modifiedTime).toLocaleDateString()}</div>
-                        </div>
-                        <button class="drive-select-btn" onclick="${isFolder ? `importGoogleDriveFolder('${file.id}', '${file.name}')` : `downloadGoogleDriveFile('${file.id}', '${file.name}', '${mimeType}')`}">
-                            ${isFolder ? 'Import Folder' : 'Import'}
-                        </button>
-                    `;
-                    
-                    driveFilesList.appendChild(fileElement);
-                });
-                
-                if (driveFilesContainer) {
-                    driveFilesContainer.style.display = 'block';
-                }
-            });
-        }
-
-        function downloadGoogleDriveFile(fileId, fileName, mimeType) {
-            safeExecute(async () => {
-                showGoogleStatus('Importing file from Google Drive...', 'success');
-                
-                let downloadUrl;
-                let finalMimeType = mimeType;
-                
-                if (mimeType === 'application/vnd.google-apps.document') {
-                    downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`;
-                    fileName = fileName.replace(/\.[^/.]+$/, "") + '.pdf';
-                    finalMimeType = 'application/pdf';
-                } else if (mimeType === 'application/vnd.google-apps.spreadsheet') {
-                    downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`;
-                    fileName = fileName.replace(/\.[^/.]+$/, "") + '.pdf';
-                    finalMimeType = 'application/pdf';
-                } else {
-                    downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-                }
-                
-                const response = await gapi.client.request({
-                    path: downloadUrl,
-                    method: 'GET'
-                });
-                
-                const blob = new Blob([response.body], { type: finalMimeType });
-                const file = new File([blob], fileName, { type: finalMimeType });
-                
-                const newFileId = `gdrive-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                const aiSuggestion = await analyzeDocumentContent(file);
-                
-                uploadedFiles.set(newFileId, {
-                    file: file,
-                    name: fileName,
-                    size: blob.size,
-                    type: finalMimeType,
-                    aiSuggestion: aiSuggestion,
-                    assigned: false,
-                    source: 'google-drive'
-                });
-                
-                const fileElement = createFileElement(newFileId, file, aiSuggestion);
-                const fileInfo = fileElement.querySelector('.file-info');
-                if (fileInfo) {
-                    fileInfo.innerHTML += '<br><small style="color: #4285f4;">☁️ From Google Drive</small>';
-                }
-                
-                const uploadedFilesContainer = safeGetElement('uploadedFiles');
-                if (uploadedFilesContainer) {
-                    uploadedFilesContainer.appendChild(fileElement);
-                }
-                
-                updateProgress();
-                showGoogleStatus(`Successfully imported ${fileName}`, 'success');
-            });
-        }
-
-        function importGoogleDriveFolder(folderId, folderName) {
-            safeExecute(async () => {
-                showGoogleStatus(`Importing folder "${folderName}" from Google Drive...`, 'success');
-                
-                const response = await gapi.client.drive.files.list({
-                    pageSize: 100,
-                    fields: 'files(id, name, mimeType, size, modifiedTime)',
-                    q: `'${folderId}' in parents and trashed=false and (mimeType='application/pdf' or mimeType contains 'image/' or mimeType contains 'document')`
-                });
-
-                const files = response.result.files;
-                if (!files || files.length === 0) {
-                    showGoogleStatus(`No documents found in folder "${folderName}".`, 'error');
-                    return;
-                }
-
-                let importedCount = 0;
-                for (const file of files) {
-                    try {
-                        await downloadGoogleDriveFile(file.id, file.name, file.mimeType);
-                        importedCount++;
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                    } catch (error) {
-                        console.error(`Error importing file ${file.name}:`, error);
-                    }
-                }
-
-                showGoogleStatus(`Successfully imported ${importedCount} files from folder "${folderName}"`, 'success');
-            });
-        }
-
-        function getFileExtension(fileName, mimeType) {
-            if (mimeType) {
-                if (mimeType.includes('pdf')) return 'PDF';
-                if (mimeType.includes('image')) return 'IMG';
-                if (mimeType.includes('document')) return 'DOC';
-                if (mimeType.includes('spreadsheet')) return 'XLS';
-            }
-            const ext = fileName.split('.').pop();
-            return ext ? ext.toUpperCase().substr(0, 3) : 'FILE';
-        }
-
-        function formatFileSize(bytes) {
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            if (bytes === 0) return '0 Bytes';
-            const i = Math.floor(Math.log(bytes) / Math.log(1024));
-            return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-        }
-
-        // Initialize the application
+        // Initialize the application immediately
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initializing Loan Document Management System...');
+            console.log('✅ DOM loaded - initializing core features...');
             
             try {
-                setupCompanyTypeSelection();
-                setupDragAndDrop();
-                generateChecklist(); // Start with private-limited selected
+                // Core functionality - initialize immediately
+                initializeCoreFeatures();
+                console.log('✅ Core application initialized successfully');
                 
-                console.log('✅ Core functionality initialized');
-                
-                // Google Drive integration is optional - don't block app startup
-                setTimeout(() => {
-                    if (!googleApiAvailable) {
-                        console.info('ℹ️ Google Drive integration not available - app running in local mode');
-                        disableGoogleDriveIntegration();
-                    }
-                }, 3000); // Give APIs 3 seconds to load
+                // Optional Google Drive integration - load separately
+                setTimeout(initializeGoogleDriveOptionally, 2000);
                 
             } catch (error) {
-                console.error('Error initializing app:', error);
-                alert('There was an error starting the application. Please refresh the page.');
+                console.error('❌ Error initializing application:', error);
+                alert('Error starting the application. Please refresh the page.');
             }
         });
+
+        function initializeCoreFeatures() {
+            setupCompanyTypeSelection();
+            setupDragAndDrop();
+            generateChecklist();
+            setupDocumentPreview();
+        }
 
         function setupCompanyTypeSelection() {
             const companyCards = document.querySelectorAll('.company-type-card');
@@ -1418,9 +980,9 @@
         }
 
         function setupDragAndDrop() {
-            const uploadZone = safeGetElement('uploadZone');
-            const fileInput = safeGetElement('fileInput');
-            const folderInput = safeGetElement('folderInput');
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            const folderInput = document.getElementById('folderInput');
 
             if (uploadZone && fileInput) {
                 uploadZone.addEventListener('click', () => fileInput.click());
@@ -1454,28 +1016,17 @@
 
         function generateChecklist() {
             const requirements = documentRequirements[selectedCompanyType];
-            const checklistContent = safeGetElement('checklistContent');
-            const checklistTitle = safeGetElement('checklistTitle');
-            const workflowContainer = safeGetElement('workflowContainer');
-            const progressSummary = safeGetElement('progressSummary');
-            const actionButtons = safeGetElement('actionButtons');
+            const checklistContent = document.getElementById('checklistContent');
+            const checklistTitle = document.getElementById('checklistTitle');
             
-            // Show containers
-            if (workflowContainer) workflowContainer.style.display = 'grid';
-            if (progressSummary) progressSummary.style.display = 'grid';
-            if (actionButtons) actionButtons.style.display = 'grid';
-            
-            // Update title
             if (checklistTitle) {
                 checklistTitle.textContent = selectedCompanyType.replace(/-/g, ' ').toUpperCase();
             }
             
-            // Clear previous content
-            if (checklistContent) {
-                checklistContent.innerHTML = '';
-            }
+            if (!checklistContent) return;
             
-            // Reset document assignments - ensure it's properly initialized
+            // Reset
+            checklistContent.innerHTML = '';
             documentAssignments = new Map();
             checklistItems = [];
             
@@ -1499,9 +1050,8 @@
                     htmlContent += `
                         <div class="checklist-item" data-item-id="${itemId}" ondrop="handleDrop(event)" ondragover="allowDrop(event)">
                             <div class="status-indicator" id="status-${itemId}">✗</div>
-                            <div class="checklist-label">${document} <span class="file-count" id="count-${itemId}" style="color: #48bb78; font-weight: bold;">(0 files)</span></div>
-                            <div class="assigned-files" id="assigned-${itemId}" style="display: none; flex-wrap: wrap; gap: 5px; margin-top: 8px;">
-                                <!-- Multiple assigned files will appear here -->
+                            <div class="checklist-label">${document} <span class="file-count" id="count-${itemId}">(0 files)</span></div>
+                            <div class="assigned-files" id="assigned-${itemId}" style="display: none;">
                             </div>
                         </div>
                     `;
@@ -1511,19 +1061,16 @@
                 htmlContent += `</div>`;
             });
             
-            if (checklistContent) {
-                checklistContent.innerHTML = htmlContent;
-            }
+            checklistContent.innerHTML = htmlContent;
             updateProgress();
         }
 
         function handleFiles(files) {
-            const uploadedFilesContainer = safeGetElement('uploadedFiles');
+            const uploadedFilesContainer = document.getElementById('uploadedFiles');
             
             Array.from(files).forEach(async (file) => {
                 const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                 
-                // Enhanced AI suggestion based on content analysis
                 const aiSuggestion = await analyzeDocumentContent(file);
                 
                 uploadedFiles.set(fileId, {
@@ -1532,8 +1079,7 @@
                     size: file.size,
                     type: file.type,
                     aiSuggestion: aiSuggestion,
-                    assigned: false,
-                    webkitRelativePath: file.webkitRelativePath || '' // For folder uploads
+                    assigned: false
                 });
                 
                 const fileElement = createFileElement(fileId, file, aiSuggestion);
@@ -1546,46 +1092,34 @@
         }
 
         async function analyzeDocumentContent(file) {
-            try {
-                // First check filename patterns
-                const filenameMatch = detectDocumentType(file.name);
-                if (filenameMatch) return filenameMatch;
+            const filenameMatch = detectDocumentType(file.name);
+            if (filenameMatch) return filenameMatch;
 
-                // For images, simulate OCR content analysis
-                if (file.type.startsWith('image/')) {
-                    return await simulateImageOCR(file);
-                }
-                
-                // For PDFs, simulate text extraction
-                if (file.type === 'application/pdf') {
-                    return await simulatePDFTextExtraction(file);
-                }
-                
-                return null;
-            } catch (error) {
-                console.error('Error analyzing document:', error);
-                return detectDocumentType(file.name); // Fallback to filename analysis
+            if (file.type.startsWith('image/')) {
+                return simulateImageOCR(file);
             }
+            
+            if (file.type === 'application/pdf') {
+                return simulatePDFTextExtraction(file);
+            }
+            
+            return null;
         }
 
-        async function simulateImageOCR(file) {
-            // Simulate OCR analysis based on common document characteristics
+        function simulateImageOCR(file) {
             const fileName = file.name.toLowerCase();
             
-            // Simulate reading image content patterns
             if (fileName.includes('pan') || fileName.includes('card')) return 'PAN Card';
             if (fileName.includes('aadhar') || fileName.includes('aadhaar')) return 'Aadhar Card';
             if (fileName.includes('bank') || fileName.includes('statement')) return 'Bank Statement';
             if (fileName.includes('gst')) return 'GST Certificate';
             if (fileName.includes('bill') || fileName.includes('electricity')) return 'Electricity Bill';
             
-            // For demo purposes, randomly assign some common document types
             const commonTypes = ['PAN Card', 'Aadhar Card', 'Bank Statement', 'GST Certificate'];
             return commonTypes[Math.floor(Math.random() * commonTypes.length)];
         }
 
-        async function simulatePDFTextExtraction(file) {
-            // Simulate PDF text extraction
+        function simulatePDFTextExtraction(file) {
             const fileName = file.name.toLowerCase();
             
             if (fileName.includes('itr') || fileName.includes('return')) return 'ITR Document';
@@ -1678,24 +1212,20 @@
             
             if (!file || !item || file.assigned) return;
             
-            // Initialize assignment array if it doesn't exist
             if (!documentAssignments.has(itemId)) {
                 documentAssignments.set(itemId, []);
             }
             
-            // Add file to assignment array
             const assignedFiles = documentAssignments.get(itemId);
             assignedFiles.push(fileId);
             
-            // Mark file as assigned
             file.assigned = true;
             file.assignedTo = itemId;
             item.assigned = true;
             
-            // Update UI
-            const statusIndicator = safeGetElement(`status-${itemId}`);
-            const assignedFilesDiv = safeGetElement(`assigned-${itemId}`);
-            const fileCountSpan = safeGetElement(`count-${itemId}`);
+            const statusIndicator = document.getElementById(`status-${itemId}`);
+            const assignedFilesDiv = document.getElementById(`assigned-${itemId}`);
+            const fileCountSpan = document.getElementById(`count-${itemId}`);
             
             if (statusIndicator) {
                 statusIndicator.textContent = '✓';
@@ -1703,12 +1233,11 @@
             }
             
             if (assignedFilesDiv) {
-                // Create file tag
                 const fileTag = document.createElement('div');
                 fileTag.className = 'assigned-file';
                 fileTag.id = `file-tag-${fileId}`;
                 fileTag.innerHTML = `
-                    <span class="file-name">${file.name}</span>
+                    <span>${file.name}</span>
                     <button class="remove-assignment" onclick="removeSingleAssignment('${itemId}', '${fileId}')">×</button>
                 `;
                 
@@ -1716,12 +1245,10 @@
                 assignedFilesDiv.style.display = 'flex';
             }
             
-            // Update file count
             if (fileCountSpan) {
                 fileCountSpan.textContent = `(${assignedFiles.length} files)`;
             }
             
-            // Hide the file from uploaded files section
             const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
             if (fileElement) {
                 fileElement.classList.add('assigned');
@@ -1735,37 +1262,31 @@
             const assignedFiles = documentAssignments.get(itemId);
             if (!assignedFiles) return;
             
-            // Remove fileId from the array
             const fileIndex = assignedFiles.indexOf(fileId);
             if (fileIndex > -1) {
                 assignedFiles.splice(fileIndex, 1);
             }
             
             const file = uploadedFiles.get(fileId);
-            const item = checklistItems.find(item => item.id === itemId);
-            
             if (file) {
                 file.assigned = false;
                 file.assignedTo = null;
             }
             
-            // Update UI
-            const fileTag = safeGetElement(`file-tag-${fileId}`);
+            const fileTag = document.getElementById(`file-tag-${fileId}`);
             if (fileTag) {
                 fileTag.remove();
             }
             
-            const fileCountSpan = safeGetElement(`count-${itemId}`);
-            const assignedFilesDiv = safeGetElement(`assigned-${itemId}`);
+            const fileCountSpan = document.getElementById(`count-${itemId}`);
+            const assignedFilesDiv = document.getElementById(`assigned-${itemId}`);
             
-            // Update file count
             if (fileCountSpan) {
                 fileCountSpan.textContent = `(${assignedFiles.length} files)`;
             }
             
-            // If no files left, update status
             if (assignedFiles.length === 0) {
-                const statusIndicator = safeGetElement(`status-${itemId}`);
+                const statusIndicator = document.getElementById(`status-${itemId}`);
                 if (statusIndicator) {
                     statusIndicator.textContent = '✗';
                     statusIndicator.classList.remove('completed');
@@ -1773,13 +1294,13 @@
                 if (assignedFilesDiv) {
                     assignedFilesDiv.style.display = 'none';
                 }
+                const item = checklistItems.find(item => item.id === itemId);
                 if (item) {
                     item.assigned = false;
                 }
                 documentAssignments.delete(itemId);
             }
             
-            // Show the file back in uploaded files section
             const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
             if (fileElement) {
                 fileElement.classList.remove('assigned');
@@ -1789,69 +1310,39 @@
             updateProgress();
         }
 
-        function removeAssignment(itemId) {
-            // Remove all assignments for this item (for backwards compatibility)
-            const assignedFiles = documentAssignments.get(itemId);
-            if (!assignedFiles || assignedFiles.length === 0) return;
-            
-            // Remove all files from this checklist item
-            const filesToRemove = [...assignedFiles]; // Create a copy to avoid modification during iteration
-            filesToRemove.forEach(fileId => {
-                removeSingleAssignment(itemId, fileId);
-            });
-        }
-
         function updateProgress() {
-            try {
-                const uploadedCount = uploadedFiles.size;
-                let totalMatchedFiles = 0;
-                
-                // Count total matched files across all checklist items
-                for (const [itemId, fileIds] of documentAssignments.entries()) {
-                    if (Array.isArray(fileIds)) {
-                        totalMatchedFiles += fileIds.length;
-                    }
+            const uploadedCount = uploadedFiles.size;
+            let totalMatchedFiles = 0;
+            
+            for (const [itemId, fileIds] of documentAssignments.entries()) {
+                if (Array.isArray(fileIds)) {
+                    totalMatchedFiles += fileIds.length;
                 }
-                
-                const totalRequired = checklistItems.length;
-                const pendingCount = checklistItems.filter(item => !item.assigned).length;
-                
-                const uploadedCountEl = safeGetElement('uploadedCount');
-                const matchedCountEl = safeGetElement('matchedCount');
-                const pendingCountEl = safeGetElement('pendingCount');
-                
-                if (uploadedCountEl) uploadedCountEl.textContent = uploadedCount;
-                if (matchedCountEl) matchedCountEl.textContent = totalMatchedFiles;
-                if (pendingCountEl) pendingCountEl.textContent = pendingCount;
-            } catch (error) {
-                console.warn('Error updating progress:', error);
             }
+            
+            const pendingCount = checklistItems.filter(item => !item.assigned).length;
+            
+            const uploadedCountEl = document.getElementById('uploadedCount');
+            const matchedCountEl = document.getElementById('matchedCount');
+            const pendingCountEl = document.getElementById('pendingCount');
+            
+            if (uploadedCountEl) uploadedCountEl.textContent = uploadedCount;
+            if (matchedCountEl) matchedCountEl.textContent = totalMatchedFiles;
+            if (pendingCountEl) pendingCountEl.textContent = pendingCount;
         }
 
         function autoMatchDocuments() {
             let matchCount = 0;
             const matchedPairs = [];
             
-            console.log('Starting AI Auto-Match...');
-            console.log('Available files:', Array.from(uploadedFiles.keys()));
-            console.log('Available checklist items:', checklistItems.map(item => item.document));
-            
             for (const [fileId, file] of uploadedFiles.entries()) {
-                if (file.assigned || !file.aiSuggestion) {
-                    console.log(`Skipping ${file.name}: assigned=${file.assigned}, suggestion=${file.aiSuggestion}`);
-                    continue;
-                }
+                if (file.assigned || !file.aiSuggestion) continue;
                 
-                // Find best matching checklist item using multiple strategies
-                let bestMatch = null;
-                
-                // Strategy 1: Exact AI suggestion match
-                bestMatch = checklistItems.find(item => 
+                let bestMatch = checklistItems.find(item => 
                     !item.assigned && 
                     item.document.toLowerCase().includes(file.aiSuggestion.toLowerCase())
                 );
                 
-                // Strategy 2: Keyword matching
                 if (!bestMatch) {
                     const suggestionKeywords = file.aiSuggestion.toLowerCase().split(' ');
                     bestMatch = checklistItems.find(item => 
@@ -1862,66 +1353,29 @@
                     );
                 }
                 
-                // Strategy 3: Enhanced pattern matching
-                if (!bestMatch) {
-                    const suggestion = file.aiSuggestion.toLowerCase();
-                    bestMatch = checklistItems.find(item => {
-                        if (item.assigned) return false;
-                        
-                        const itemText = item.document.toLowerCase();
-                        
-                        // Specific mappings
-                        if (suggestion.includes('pan') && itemText.includes('pan')) return true;
-                        if (suggestion.includes('aadhar') && itemText.includes('aadhar')) return true;
-                        if (suggestion.includes('bank') && itemText.includes('bank')) return true;
-                        if (suggestion.includes('gst') && itemText.includes('gst')) return true;
-                        if (suggestion.includes('itr') && itemText.includes('itr')) return true;
-                        if (suggestion.includes('balance') && itemText.includes('balance')) return true;
-                        if (suggestion.includes('audit') && itemText.includes('audit')) return true;
-                        if (suggestion.includes('udyam') && itemText.includes('udyam')) return true;
-                        if (suggestion.includes('electricity') && (itemText.includes('electric') || itemText.includes('light'))) return true;
-                        if (suggestion.includes('incorporation') && itemText.includes('incorporation')) return true;
-                        if (suggestion.includes('moa') && (itemText.includes('memorandum') || itemText.includes('articles'))) return true;
-                        if (suggestion.includes('partnership') && itemText.includes('partnership')) return true;
-                        if (suggestion.includes('loan') && itemText.includes('loan')) return true;
-                        if (suggestion.includes('emi') && itemText.includes('emi')) return true;
-                        if (suggestion.includes('director') && itemText.includes('director')) return true;
-                        if (suggestion.includes('shareholder') && itemText.includes('shareholder')) return true;
-                        
-                        return false;
-                    });
-                }
-                
                 if (bestMatch) {
-                    console.log(`Matching ${file.name} (${file.aiSuggestion}) -> ${bestMatch.document}`);
                     assignFileToChecklist(fileId, bestMatch.id);
                     matchedPairs.push({ file: file.name, document: bestMatch.document });
                     matchCount++;
-                } else {
-                    console.log(`No match found for ${file.name} (${file.aiSuggestion})`);
                 }
             }
             
-            // Show detailed results
-            let resultMessage = `🤖 AI Auto-Match Complete!\n\n`;
-            resultMessage += `✅ Successfully matched ${matchCount} documents:\n\n`;
+            let resultMessage = `🤖 AI Auto-Match Complete!\n\n✅ Successfully matched ${matchCount} documents:\n\n`;
             
             if (matchedPairs.length > 0) {
                 matchedPairs.forEach((pair, index) => {
                     resultMessage += `${index + 1}. ${pair.file}\n   → ${pair.document}\n\n`;
                 });
             } else {
-                resultMessage += 'No automatic matches found.\n';
-                resultMessage += 'Try manually dragging files to checklist items.\n\n';
+                resultMessage += 'No automatic matches found.\nTry manually dragging files to checklist items.\n\n';
             }
             
             resultMessage += `📋 Please review and adjust matches as needed.`;
-            
             alert(resultMessage);
         }
 
         function generateLoginQuery() {
-            const customerName = safeGetElement('customerName')?.value || 'Customer';
+            const customerName = document.getElementById('customerName')?.value || 'Customer';
             const missingDocs = checklistItems.filter(item => !item.assigned).map(item => item.document);
             
             if (missingDocs.length === 0) {
@@ -1939,8 +1393,6 @@ ${missingDocs.map((doc, index) => `${index + 1}. ${doc}`).join('\n')}
 
 Please submit these documents at your earliest convenience to avoid any delays in processing your loan application.
 
-If you have any questions or need clarification about any of these documents, please feel free to contact us.
-
 Thank you for your cooperation.
 
 Best regards,
@@ -1950,9 +1402,9 @@ Loan Processing Team`;
         }
 
         function generateBankEmail() {
-            const customerName = safeGetElement('customerName')?.value || 'Customer';
-            const bankRMName = safeGetElement('bankRMName')?.value || 'Bank RM';
-            const bankRMEmail = safeGetElement('bankRMEmail')?.value || 'rm@bank.com';
+            const customerName = document.getElementById('customerName')?.value || 'Customer';
+            const bankRMName = document.getElementById('bankRMName')?.value || 'Bank RM';
+            const bankRMEmail = document.getElementById('bankRMEmail')?.value || 'rm@bank.com';
             
             const assignedDocs = [];
             for (const [itemId, fileIds] of documentAssignments.entries()) {
@@ -1971,7 +1423,7 @@ Loan Processing Team`;
                 return;
             }
             
-            const solvedetRM = safeGetElement('solvedetRM')?.value || 'Solvedet RM';
+            const solvedetRM = document.getElementById('solvedetRM')?.value || 'Solvedet RM';
             
             const emailContent = `To: ${bankRMEmail}
 Subject: Loan Documents - ${customerName}
@@ -1985,8 +1437,6 @@ ${assignedDocs.map((doc, index) => `${index + 1}. ${doc}`).join('\n')}
 
 All documents have been verified and are ready for your review.
 
-Should you require any additional information, please let us know.
-
 Best regards,
 ${solvedetRM}`;
             
@@ -1994,9 +1444,9 @@ ${solvedetRM}`;
         }
 
         function showEmailPreview(title, content) {
-            const emailPreview = safeGetElement('emailPreview');
-            const emailTitle = safeGetElement('emailTitle');
-            const emailContent = safeGetElement('emailContent');
+            const emailPreview = document.getElementById('emailPreview');
+            const emailTitle = document.getElementById('emailTitle');
+            const emailContent = document.getElementById('emailContent');
             
             if (emailTitle) emailTitle.textContent = title;
             if (emailContent) emailContent.textContent = content;
@@ -2012,13 +1462,9 @@ ${solvedetRM}`;
                 return;
             }
             
-            const customerName = safeGetElement('customerName')?.value || 'Customer';
+            const customerName = document.getElementById('customerName')?.value || 'Customer';
             
             try {
-                console.log('Starting document organization...');
-                console.log('Document assignments:', documentAssignments);
-                
-                // Group documents by category for folder organization
                 const documentsByCategory = new Map();
                 const renamedFiles = [];
                 
@@ -2034,25 +1480,14 @@ ${solvedetRM}`;
                         fileIds.forEach((fileId, index) => {
                             const file = uploadedFiles.get(fileId);
                             if (file) {
-                                // Generate new filename
                                 const fileExtension = file.name.split('.').pop().toLowerCase();
                                 const documentType = item.document.toLowerCase()
                                     .replace(/[^a-z0-9\s]/g, '')
                                     .replace(/\s+/g, '_')
-                                    .replace(/_{2,}/g, '_')
                                     .substring(0, 40);
                                 const sanitizedCustomer = customerName.replace(/[^a-zA-Z0-9]/g, '_');
                                 const fileNumber = fileIds.length > 1 ? `_${index + 1}` : '';
                                 const newFileName = `${documentType}_${sanitizedCustomer}${fileNumber}.${fileExtension}`;
-                                
-                                documentsByCategory.get(category).push({
-                                    originalName: file.name,
-                                    newName: newFileName,
-                                    document: item.document,
-                                    path: file.webkitRelativePath || file.name,
-                                    fileId: fileId,
-                                    itemId: itemId
-                                });
                                 
                                 renamedFiles.push({
                                     originalFile: file.file,
@@ -2064,9 +1499,7 @@ ${solvedetRM}`;
                     }
                 }
                 
-                console.log('Documents by category:', documentsByCategory);
-                
-                // Download actual files with organized structure
+                // Download files
                 renamedFiles.forEach((fileData, index) => {
                     setTimeout(() => {
                         const blob = new Blob([fileData.originalFile], { type: fileData.originalFile.type });
@@ -2075,154 +1508,82 @@ ${solvedetRM}`;
                         a.href = url;
                         a.download = `${fileData.category}_${fileData.newName}`;
                         
-                        // Ensure the link is added to DOM for download
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
                         
-                        // Clean up the URL
                         setTimeout(() => URL.revokeObjectURL(url), 1000);
-                    }, index * 500); // Stagger downloads to avoid browser blocking
+                    }, index * 500);
                 });
                 
-                // Create comprehensive download summary
+                // Create summary
                 let summary = `LOAN DOCUMENT ORGANIZATION PLAN\n`;
-                summary += `==========================================\n`;
                 summary += `Customer: ${customerName}\n`;
-                summary += `Generated: ${new Date().toLocaleString()}\n`;
-                summary += `Company Type: ${selectedCompanyType.replace(/-/g, ' ').toUpperCase()}\n`;
-                summary += `Total Documents Processed: ${documentAssignments.size}\n`;
-                summary += `==========================================\n\n`;
+                summary += `Generated: ${new Date().toLocaleString()}\n\n`;
                 
-                summary += `📁 RECOMMENDED FOLDER STRUCTURE:\n`;
-                summary += `\n${customerName}_Loan_Documents/\n`;
-                
-                if (documentsByCategory.size > 0) {
-                    documentsByCategory.forEach((files, category) => {
-                        summary += `├── ${category}/\n`;
-                        files.forEach((file, index) => {
-                            const isLast = index === files.length - 1;
-                            const prefix = isLast ? '└──' : '├──';
-                            summary += `│   ${prefix} ${file.newName}\n`;
-                            summary += `│       📄 Original: ${file.originalName}\n`;
-                            summary += `│       📋 Document: ${file.document}\n`;
-                        });
-                        summary += `│\n`;
-                    });
-                } else {
-                    summary += `└── (No documents organized yet)\n\n`;
-                }
-                
-                // File renaming instructions
-                summary += `\n🔄 FILE ORGANIZATION INSTRUCTIONS:\n`;
-                summary += `=====================================\n`;
-                summary += `All matched files have been downloaded with organized names.\n`;
-                summary += `Create the folder structure above and move files accordingly.\n\n`;
-                
-                renamedFiles.forEach((file, index) => {
-                    summary += `${index + 1}. Downloaded: ${file.category}_${file.newName}\n`;
-                    summary += `   → Original: ${file.originalFile.name}\n`;
-                    summary += `   → Move to: ${file.category}/\n\n`;
-                });
-                
-                // Missing documents
                 const missingDocs = checklistItems.filter(item => !item.assigned);
-                if (missingDocs.length > 0) {
-                    summary += `\n❌ MISSING DOCUMENTS (${missingDocs.length}):\n`;
-                    summary += `==============================\n`;
-                    missingDocs.forEach((item, index) => {
-                        summary += `${index + 1}. ${item.document}\n`;
-                        summary += `   Category: ${item.category}\n\n`;
-                    });
-                    
-                    summary += `📧 Send login query to customer for missing documents.\n\n`;
-                }
-                
-                // Statistics
                 let totalMatchedFiles = 0;
                 for (const [itemId, fileIds] of documentAssignments.entries()) {
                     totalMatchedFiles += fileIds.length;
                 }
                 
-                summary += `📊 COMPLETION STATISTICS:\n`;
-                summary += `=========================\n`;
+                summary += `Statistics:\n`;
                 summary += `✅ Documents Matched: ${totalMatchedFiles} files\n`;
                 summary += `❌ Documents Missing: ${missingDocs.length}\n`;
-                summary += `📋 Total Required: ${checklistItems.length}\n`;
-                const completionPercentage = Math.round((documentAssignments.size / checklistItems.length) * 100);
-                summary += `📈 Completion Rate: ${completionPercentage}%\n\n`;
+                summary += `📋 Total Required: ${checklistItems.length}\n\n`;
                 
-                // Next steps
-                summary += `🎯 NEXT STEPS:\n`;
-                summary += `=============\n`;
-                summary += `1. All matched files have been downloaded to your PC\n`;
-                summary += `2. Create the folder structure as shown above\n`;
-                summary += `3. Move downloaded files to appropriate folders\n`;
                 if (missingDocs.length > 0) {
-                    summary += `4. Request missing documents from customer\n`;
+                    summary += `Missing Documents:\n`;
+                    missingDocs.forEach((item, index) => {
+                        summary += `${index + 1}. ${item.document}\n`;
+                    });
                 }
-                summary += `5. Send organized documents to bank RM\n\n`;
                 
-                summary += `Generated by Loan Document Management System\n`;
-                summary += `© ${new Date().getFullYear()} - Document Processing Automation\n`;
-                
-                // Create and download summary file
-                const blob = new Blob([summary], { type: 'text/plain; charset=utf-8' });
+                const blob = new Blob([summary], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${customerName.replace(/[^a-zA-Z0-9]/g, '_')}_Document_Organization_Plan.txt`;
+                a.download = `${customerName.replace(/[^a-zA-Z0-9]/g, '_')}_Organization_Plan.txt`;
                 
-                // Ensure the link is added to DOM for download
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 
-                // Clean up the URL
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
                 
-                // Show success message with details
-                let totalMatchedFiles = 0;
-                for (const [itemId, fileIds] of documentAssignments.entries()) {
-                    totalMatchedFiles += fileIds.length;
-                }
-                
-                const successMessage = `📁 Document Organization Complete!\n\n` +
-                      `📊 Summary:\n` +
-                      `• ✅ Downloaded: ${totalMatchedFiles} organized files\n` +
-                      `• ❌ Missing: ${missingDocs.length} documents\n` +
-                      `• 📈 Completion: ${completionPercentage}%\n` +
-                      `• 📁 Categories: ${documentsByCategory.size}\n\n` +
-                      `📄 Downloaded to your PC:\n` +
-                      `• All matched files with organized names\n` +
-                      `• Organization plan document\n` +
-                      `• Folder structure guide\n\n` +
-                      `🎯 Check your Downloads folder and follow the organization plan!`;
-                
-                alert(successMessage);
-                
-                console.log('Organization plan generated successfully');
+                const completionPercentage = Math.round((documentAssignments.size / checklistItems.length) * 100);
+                alert(`📁 Document Organization Complete!\n\n📊 Summary:\n• Downloaded: ${totalMatchedFiles} files\n• Missing: ${missingDocs.length} documents\n• Completion: ${completionPercentage}%\n\n🎯 Check your Downloads folder!`);
                 
             } catch (error) {
                 console.error('Error organizing documents:', error);
-                alert(`❌ Error generating organization plan:\n\n${error.message}\n\nPlease try again or check the console for details.`);
+                alert(`❌ Error: ${error.message}`);
             }
         }
 
-        // Document Preview Functions
+        function setupDocumentPreview() {
+            // Set up modal event handlers
+            document.addEventListener('dragover', function(e) {
+                const checklistItems = document.querySelectorAll('.checklist-item');
+                checklistItems.forEach(item => {
+                    if (item !== e.target.closest('.checklist-item')) {
+                        item.classList.remove('drop-target');
+                    }
+                });
+            });
+        }
+
         function previewDocument(fileId) {
             const file = uploadedFiles.get(fileId);
             if (!file) return;
             
-            const modal = safeGetElement('documentModal');
-            const modalTitle = safeGetElement('modalTitle');
-            const modalBody = safeGetElement('modalBody');
+            const modal = document.getElementById('documentModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
             
             if (modalTitle) modalTitle.textContent = file.name;
             if (modalBody) modalBody.innerHTML = '<div class="loading-spinner">Loading document...</div>';
             if (modal) modal.classList.add('show');
             
-            // Add file analysis
             analyzeAndShowDocument(file.file, modalBody);
         }
 
@@ -2233,9 +1594,8 @@ ${solvedetRM}`;
                 let content = '';
                 
                 if (file.type.startsWith('image/')) {
-                    // Show image with simulated OCR analysis
                     const imageUrl = URL.createObjectURL(file);
-                    const analysisText = await simulateImageOCR(file);
+                    const analysisText = await analyzeDocumentContent(file);
                     
                     content = `
                         <div class="file-analysis">
@@ -2243,17 +1603,13 @@ ${solvedetRM}`;
                             <div class="detected-content">
                                 <strong>Detected Type:</strong> ${analysisText || 'Unknown'}<br>
                                 <strong>File Type:</strong> Image (${file.type})<br>
-                                <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
-                                <strong>Status:</strong> ✅ Image loaded successfully
+                                <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB
                             </div>
                         </div>
-                        <img src="${imageUrl}" alt="${file.name}" class="image-viewer" 
-                             onload="console.log('Image loaded successfully')" 
-                             onerror="console.error('Error loading image'); this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFByZXZpZXc8L3RleHQ+PC9zdmc+'">
+                        <img src="${imageUrl}" alt="${file.name}" class="image-viewer">
                     `;
                 } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-                    // Show PDF with simulated text analysis
-                    const analysisText = await simulatePDFTextExtraction(file);
+                    const analysisText = await analyzeDocumentContent(file);
                     const pdfUrl = URL.createObjectURL(file);
                     
                     content = `
@@ -2262,39 +1618,16 @@ ${solvedetRM}`;
                             <div class="detected-content">
                                 <strong>Detected Type:</strong> ${analysisText || 'PDF Document'}<br>
                                 <strong>File Type:</strong> PDF<br>
-                                <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
-                                <strong>Status:</strong> ✅ PDF ready for viewing
+                                <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB
                             </div>
                         </div>
                         <div style="width: 100%; height: 500px; border: 2px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
-                            <iframe src="${pdfUrl}" 
-                                    style="width: 100%; height: 100%; border: none;" 
-                                    onload="console.log('PDF loaded successfully')"
-                                    onerror="console.error('Error loading PDF')">
+                            <iframe src="${pdfUrl}" style="width: 100%; height: 100%; border: none;">
                                 <p>PDF cannot be displayed. <a href="${pdfUrl}" target="_blank">Click here to download and view</a></p>
                             </iframe>
                         </div>
                     `;
-                } else if (file.type.startsWith('text/') || file.name.toLowerCase().endsWith('.txt')) {
-                    // Show text content
-                    try {
-                        const text = await file.text();
-                        content = `
-                            <div class="file-analysis">
-                                <div class="analysis-header">📄 Text Document</div>
-                                <div class="detected-content">
-                                    <strong>File Type:</strong> Text Document<br>
-                                    <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
-                                    <strong>Lines:</strong> ${text.split('\n').length}
-                                </div>
-                            </div>
-                            <div class="text-viewer">${text || 'No text content found'}</div>
-                        `;
-                    } catch (error) {
-                        content = `<div style="padding: 20px; text-align: center;">Error reading text file: ${error.message}</div>`;
-                    }
                 } else {
-                    // For other file types, show file info and download option
                     const fileUrl = URL.createObjectURL(file);
                     content = `
                         <div class="file-analysis">
@@ -2302,13 +1635,11 @@ ${solvedetRM}`;
                             <div class="detected-content">
                                 <strong>File Name:</strong> ${file.name}<br>
                                 <strong>File Type:</strong> ${file.type || 'Unknown'}<br>
-                                <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
-                                <strong>Last Modified:</strong> ${file.lastModified ? new Date(file.lastModified).toLocaleString() : 'Unknown'}<br><br>
+                                <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br><br>
                                 <a href="${fileUrl}" download="${file.name}" 
                                    style="background: #4e54c8; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none;">
                                    📥 Download File
-                                </a><br><br>
-                                <em>Preview not available for this file type. Use download button above.</em>
+                                </a>
                             </div>
                         </div>
                     `;
@@ -2335,11 +1666,10 @@ ${solvedetRM}`;
 
         function closeModal(event) {
             if (event && event.target !== event.currentTarget) return;
-            const modal = safeGetElement('documentModal');
+            const modal = document.getElementById('documentModal');
             if (modal) {
                 modal.classList.remove('show');
                 
-                // Clean up any object URLs
                 const images = modal.querySelectorAll('img');
                 const iframes = modal.querySelectorAll('iframe');
                 images.forEach(img => URL.revokeObjectURL(img.src));
@@ -2347,90 +1677,37 @@ ${solvedetRM}`;
             }
         }
 
-        // Add drag over effect for checklist items
-        document.addEventListener('dragover', function(e) {
-            const checklistItems = document.querySelectorAll('.checklist-item');
-            checklistItems.forEach(item => {
-                if (item !== e.target.closest('.checklist-item')) {
-                    item.classList.remove('drop-target');
+        // Google Drive Integration - Completely Optional
+        function initializeGoogleDriveOptionally() {
+            console.log('🔄 Attempting to initialize Google Drive integration...');
+            
+            const googleAuthSection = document.getElementById('googleAuthSection');
+            const authorizeButton = document.getElementById('authorizeButton');
+            const googleDriveButton = document.getElementById('googleDriveButton');
+            
+            // Update UI to show Google Drive is not available
+            if (googleAuthSection) {
+                googleAuthSection.classList.add('disabled');
+                const statusText = googleAuthSection.querySelector('p');
+                if (statusText) {
+                    statusText.textContent = 'Google Drive integration not available in this environment';
                 }
-            });
-        });
+            }
+            
+            if (authorizeButton) {
+                authorizeButton.textContent = '🔗 Not Available';
+                authorizeButton.disabled = true;
+            }
+            
+            if (googleDriveButton) {
+                googleDriveButton.textContent = '☁️ Google Drive (Not Available)';
+                googleDriveButton.disabled = true;
+            }
+            
+            console.log('ℹ️ Google Drive integration disabled - all core features remain functional');
+        }
 
-        // Optional Google API Integration
-        window.gapiLoaded = function() {
-            console.log('📥 Google API loaded');
-            gapiLoaded();
-        };
-        
-        window.gisLoaded = function() {
-            console.log('🔐 Google Identity loaded');
-            gisLoaded();
-        };
-        
-        // Graceful error handling - don't let Google API errors break the app
-        window.addEventListener('error', function(e) {
-            if (e.message === 'Script error.' || 
-                (e.filename && (e.filename.includes('googleapis') || e.filename.includes('gsi')))) {
-                console.warn('⚠️ Google API loading issue detected - disabling Google Drive integration');
-                disableGoogleDriveIntegration();
-                e.preventDefault(); // Prevent the error from bubbling up
-                return true;
-            }
-        });
-        
-        // Additional safety check
-        window.addEventListener('unhandledrejection', function(e) {
-            if (e.reason && e.reason.toString().includes('gapi')) {
-                console.warn('⚠️ Google API promise rejection - disabling Google Drive integration');
-                disableGoogleDriveIntegration();
-                e.preventDefault();
-            }
-        });
-    </script>
-    
-    <!-- Optional Google APIs - won't block app if they fail -->
-    <script>
-        // Load Google APIs with timeout protection
-        function loadGoogleAPI() {
-            const script = document.createElement('script');
-            script.src = 'https://apis.google.com/js/api.js';
-            script.async = true;
-            script.defer = true;
-            script.onload = function() {
-                if (typeof window.gapiLoaded === 'function') {
-                    window.gapiLoaded();
-                }
-            };
-            script.onerror = function() {
-                console.warn('📛 Failed to load Google Drive API - continuing without it');
-                disableGoogleDriveIntegration();
-            };
-            document.head.appendChild(script);
-        }
-        
-        function loadGoogleIdentity() {
-            const script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.async = true;
-            script.defer = true;
-            script.onload = function() {
-                if (typeof window.gisLoaded === 'function') {
-                    window.gisLoaded();
-                }
-            };
-            script.onerror = function() {
-                console.warn('📛 Failed to load Google Identity - continuing without it');
-                disableGoogleDriveIntegration();
-            };
-            document.head.appendChild(script);
-        }
-        
-        // Load Google APIs after a short delay to not block main app
-        setTimeout(() => {
-            loadGoogleAPI();
-            loadGoogleIdentity();
-        }, 1000);
+        console.log('✅ Application script loaded successfully');
     </script>
 </body>
 </html>
