@@ -204,8 +204,8 @@
         const API_KEY = 'AIzaSyCRlPzpHXYUpswkdZPWKANfU8ID2tId39s';
         const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
         
-        // Scope for Google Drive API (read and write access)
-        const SCOPE = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive';
+        // Scope for Google Drive API (using non-sensitive scopes for immediate access)
+        const SCOPE = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file';
 
         let isSignedIn = false;
         let uploadedFiles = [];
