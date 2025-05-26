@@ -6,13 +6,35 @@
     <title>Solvedet Loan Document Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>
+    <style>
+        .drag-over {
+            background-color: #dbeafe !important;
+            border-color: #3b82f6 !important;
+            transform: scale(1.02);
+        }
+        .dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+        .drop-zone {
+            transition: all 0.3s ease;
+        }
+        .file-tile {
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+        .file-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <!-- Header -->
     <header class="bg-blue-600 text-white p-6 shadow-lg">
         <div class="container mx-auto">
             <h1 class="text-3xl font-bold">📋 Solvedet Loan Document Manager</h1>
-            <p class="text-blue-100 mt-2">AI-powered document organization with Google Drive integration</p>
+            <p class="text-blue-100 mt-2">AI-powered document organization with drag & drop functionality</p>
         </div>
     </header>
 
@@ -76,7 +98,7 @@
 
         <!-- Document Preview -->
         <div id="document-preview" class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-xl font-semibold mb-4">📋 Document Preview</h2>
+            <h2 class="text-xl font-semibold mb-4">📋 Document Preview <span class="text-sm font-normal text-gray-500">(Drag files to checklist items)</span></h2>
             <div id="file-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div class="text-gray-500 text-center py-8 col-span-full">
                     No documents uploaded yet. Upload files to see them here.
@@ -90,7 +112,7 @@
             <!-- Left Column: Document Checklist -->
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-xl font-semibold mb-4 flex items-center">
-                    ✅ Loan Document Checklist
+                    ✅ Loan Document Checklist <span class="text-sm font-normal text-gray-500 ml-2">(Drop files here)</span>
                 </h2>
                 
                 <!-- AI Auto-Match Button -->
@@ -101,30 +123,54 @@
                 
                 <!-- Checklist Items -->
                 <div class="space-y-2" id="checklist-container">
-                    <button class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300" data-checklist="Credit Report">
+                    <div class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300 drop-zone" 
+                         data-checklist="Credit Report" 
+                         ondragover="allowDrop(event)" 
+                         ondrop="dropFile(event, 'Credit Report')">
                         ❌ Credit Report
-                    </button>
-                    <button class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300" data-checklist="Income Verification">
+                    </div>
+                    <div class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300 drop-zone" 
+                         data-checklist="Income Verification" 
+                         ondragover="allowDrop(event)" 
+                         ondrop="dropFile(event, 'Income Verification')">
                         ❌ Income Verification
-                    </button>
-                    <button class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300" data-checklist="Bank Statements">
+                    </div>
+                    <div class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300 drop-zone" 
+                         data-checklist="Bank Statements" 
+                         ondragover="allowDrop(event)" 
+                         ondrop="dropFile(event, 'Bank Statements')">
                         ❌ Bank Statements
-                    </button>
-                    <button class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300" data-checklist="Employment Letter">
+                    </div>
+                    <div class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300 drop-zone" 
+                         data-checklist="Employment Letter" 
+                         ondragover="allowDrop(event)" 
+                         ondrop="dropFile(event, 'Employment Letter')">
                         ❌ Employment Letter
-                    </button>
-                    <button class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300" data-checklist="Tax Returns">
+                    </div>
+                    <div class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300 drop-zone" 
+                         data-checklist="Tax Returns" 
+                         ondragover="allowDrop(event)" 
+                         ondrop="dropFile(event, 'Tax Returns')">
                         ❌ Tax Returns
-                    </button>
-                    <button class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300" data-checklist="Property Appraisal">
+                    </div>
+                    <div class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300 drop-zone" 
+                         data-checklist="Property Appraisal" 
+                         ondragover="allowDrop(event)" 
+                         ondrop="dropFile(event, 'Property Appraisal')">
                         ❌ Property Appraisal
-                    </button>
-                    <button class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300" data-checklist="Insurance Documents">
+                    </div>
+                    <div class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300 drop-zone" 
+                         data-checklist="Insurance Documents" 
+                         ondragover="allowDrop(event)" 
+                         ondrop="dropFile(event, 'Insurance Documents')">
                         ❌ Insurance Documents
-                    </button>
-                    <button class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300" data-checklist="Purchase Agreement">
+                    </div>
+                    <div class="w-full text-left p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-300 drop-zone" 
+                         data-checklist="Purchase Agreement" 
+                         ondragover="allowDrop(event)" 
+                         ondrop="dropFile(event, 'Purchase Agreement')">
                         ❌ Purchase Agreement
-                    </button>
+                    </div>
                 </div>
                 
                 <!-- Progress Bar -->
@@ -166,7 +212,7 @@
                         
                         <button onclick="organizeAndDownload()" 
                                 class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition duration-300 flex items-center justify-center">
-                            📁 Organize & Download from Google Drive
+                            📁 Organize & Download to PC
                         </button>
                         
                         <!-- Organization Results -->
@@ -188,6 +234,12 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Matched Files Display -->
+                <div id="matched-files-section" class="bg-green-50 border border-green-200 rounded-lg p-4 hidden">
+                    <h3 class="text-lg font-semibold text-green-800 mb-3">✅ Matched Documents</h3>
+                    <div id="matched-files-grid" class="space-y-2"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -199,17 +251,18 @@
             showStatus('⚠️ A script error occurred. Some features may not work properly.', 'warning');
         });
 
-        // Google API Configuration
+        // Google API Configuration - Using non-sensitive scopes
         const CLIENT_ID = '346449855415-8l1ihn224h1tccv57le5bm81qtqcln6n.apps.googleusercontent.com';
         const API_KEY = 'AIzaSyCRlPzpHXYUpswkdZPWKANfU8ID2tId39s';
         const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
         
-        // Scope for Google Drive API (using non-sensitive scopes for immediate access)
-        const SCOPE = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file';
+        // Using non-sensitive scopes for immediate access
+        const SCOPE = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email';
 
         let isSignedIn = false;
         let uploadedFiles = [];
         let gapiLoaded = false;
+        let fileMatches = {};
 
         // Initialize Google API with better error handling
         function initializeGapi() {
@@ -237,7 +290,7 @@
                             authInstance.isSignedIn.listen(updateGoogleStatus);
                         }).catch(error => {
                             console.error('Error initializing Google API:', error);
-                            showGoogleStatus('Failed to initialize Google Drive connection. Please check your internet connection.', 'error');
+                            showGoogleStatus('Failed to initialize Google Drive connection. Check internet connection.', 'error');
                         });
                     },
                     onerror: () => {
@@ -325,7 +378,8 @@
             const colors = {
                 success: 'bg-green-50 border-green-200 text-green-800',
                 error: 'bg-red-50 border-red-200 text-red-800',
-                info: 'bg-blue-50 border-blue-200 text-blue-800'
+                info: 'bg-blue-50 border-blue-200 text-blue-800',
+                warning: 'bg-yellow-50 border-yellow-200 text-yellow-800'
             };
             
             statusDiv.className = `p-3 rounded-lg border ${colors[type] || colors.info}`;
@@ -370,10 +424,19 @@
         function displayGoogleDriveFiles(files) {
             const fileGrid = document.getElementById('file-grid');
             
+            // Remove "no documents" message if present
+            const noDocsMessage = fileGrid.querySelector('.text-gray-500');
+            if (noDocsMessage && noDocsMessage.textContent.includes('No documents uploaded')) {
+                noDocsMessage.remove();
+            }
+            
             files.forEach(file => {
                 const fileElement = document.createElement('div');
-                fileElement.className = 'bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow';
+                fileElement.className = 'bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow file-tile';
                 fileElement.setAttribute('data-filename', file.name);
+                fileElement.setAttribute('draggable', 'true');
+                fileElement.addEventListener('dragstart', handleDragStart);
+                fileElement.addEventListener('dragend', handleDragEnd);
                 
                 fileElement.innerHTML = `
                     <div class="flex items-center space-x-3">
@@ -388,21 +451,10 @@
                             <p class="text-xs text-gray-400">Size: ${file.size ? Math.round(file.size/1024) + ' KB' : 'Unknown'}</p>
                         </div>
                     </div>
-                    <div class="mt-3 flex justify-between items-center">
+                    <div class="mt-3 flex justify-center">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Google Drive
+                            📁 Google Drive • Drag to match
                         </span>
-                        <select class="text-xs border border-gray-300 rounded px-2 py-1" onchange="matchFileToChecklist('${file.name}', this.value)">
-                            <option value="">Match to...</option>
-                            <option value="Credit Report">Credit Report</option>
-                            <option value="Income Verification">Income Verification</option>
-                            <option value="Bank Statements">Bank Statements</option>
-                            <option value="Employment Letter">Employment Letter</option>
-                            <option value="Tax Returns">Tax Returns</option>
-                            <option value="Property Appraisal">Property Appraisal</option>
-                            <option value="Insurance Documents">Insurance Documents</option>
-                            <option value="Purchase Agreement">Purchase Agreement</option>
-                        </select>
                     </div>
                 `;
                 
@@ -422,6 +474,33 @@
             // Open Google Drive in new tab
             window.open('https://drive.google.com', '_blank');
             showGoogleStatus('Google Drive opened in new tab.', 'success');
+        }
+
+        // Drag and Drop functionality
+        function allowDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragStart(event) {
+            event.target.classList.add('dragging');
+            event.dataTransfer.setData('text/plain', event.target.getAttribute('data-filename'));
+        }
+
+        function handleDragEnd(event) {
+            event.target.classList.remove('dragging');
+            // Remove drag-over class from all drop zones
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+        }
+
+        function dropFile(event, checklistItem) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+            
+            const fileName = event.dataTransfer.getData('text/plain');
+            matchFileToChecklist(fileName, checklistItem);
         }
 
         // File upload handling
@@ -500,8 +579,11 @@
             }
             
             const fileElement = document.createElement('div');
-            fileElement.className = 'bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow';
+            fileElement.className = 'bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow file-tile';
             fileElement.setAttribute('data-filename', file.name);
+            fileElement.setAttribute('draggable', 'true');
+            fileElement.addEventListener('dragstart', handleDragStart);
+            fileElement.addEventListener('dragend', handleDragEnd);
             
             const fileIcon = getFileIcon(file.type);
             const fileSize = (file.size / 1024).toFixed(1);
@@ -519,21 +601,10 @@
                         <p class="text-xs text-gray-400">Type: ${file.type || 'Unknown'}</p>
                     </div>
                 </div>
-                <div class="mt-3 flex justify-between items-center">
+                <div class="mt-3 flex justify-center">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Uploaded
+                        💻 Uploaded • Drag to match
                     </span>
-                    <select class="text-xs border border-gray-300 rounded px-2 py-1" onchange="matchFileToChecklist('${file.name}', this.value)">
-                        <option value="">Match to...</option>
-                        <option value="Credit Report">Credit Report</option>
-                        <option value="Income Verification">Income Verification</option>
-                        <option value="Bank Statements">Bank Statements</option>
-                        <option value="Employment Letter">Employment Letter</option>
-                        <option value="Tax Returns">Tax Returns</option>
-                        <option value="Property Appraisal">Property Appraisal</option>
-                        <option value="Insurance Documents">Insurance Documents</option>
-                        <option value="Purchase Agreement">Purchase Agreement</option>
-                    </select>
                 </div>
             `;
             
@@ -552,40 +623,96 @@
             const button = document.querySelector(`[data-checklist="${checklistItem}"]`);
             const fileElement = document.querySelector(`[data-filename="${fileName}"]`);
             
-            if (button && fileElement) {
-                button.classList.remove('bg-red-500', 'hover:bg-red-600');
-                button.classList.add('bg-green-500', 'hover:bg-green-600');
-                button.innerHTML = `✅ ${checklistItem}`;
-                
-                // Move file from preview to matched files section
-                const matchedSection = document.getElementById('matched-files-section');
-                if (!matchedSection) {
-                    // Create matched files section if it doesn't exist
-                    const newSection = document.createElement('div');
-                    newSection.id = 'matched-files-section';
-                    newSection.className = 'bg-green-50 border border-green-200 rounded-lg p-4 mt-4';
-                    newSection.innerHTML = `
-                        <h3 class="text-lg font-semibold text-green-800 mb-3">✅ Matched Documents</h3>
-                        <div id="matched-files-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-                    `;
-                    document.getElementById('document-preview').appendChild(newSection);
-                }
-                
-                // Move file element to matched section
-                const matchedGrid = document.getElementById('matched-files-grid');
-                const clonedFile = fileElement.cloneNode(true);
-                clonedFile.classList.add('opacity-90', 'border-green-300');
-                matchedGrid.appendChild(clonedFile);
-                
-                // Remove from original location
-                fileElement.remove();
-                
-                // Store match in global object for organize function
-                if (!window.fileMatches) window.fileMatches = {};
-                window.fileMatches[fileName] = checklistItem;
-                
-                showStatus(`✅ Matched: ${fileName} → ${checklistItem}`, 'success');
+            if (!button || !fileElement) {
+                showStatus(`❌ Could not match ${fileName}`, 'error');
+                return;
             }
+
+            // Check if this checklist item is already matched
+            if (button.classList.contains('bg-green-500')) {
+                showStatus(`⚠️ ${checklistItem} is already matched to another file`, 'warning');
+                return;
+            }
+            
+            // Update button appearance
+            button.classList.remove('bg-red-500', 'hover:bg-red-600');
+            button.classList.add('bg-green-500', 'hover:bg-green-600');
+            button.innerHTML = `✅ ${checklistItem}`;
+            
+            // Store match
+            fileMatches[fileName] = checklistItem;
+            
+            // Move file to matched section
+            moveToMatchedSection(fileElement, fileName, checklistItem);
+            
+            // Update progress
+            updateProgress();
+            
+            showStatus(`✅ Matched: ${fileName} → ${checklistItem}`, 'success');
+        }
+
+        function moveToMatchedSection(fileElement, fileName, checklistItem) {
+            const matchedSection = document.getElementById('matched-files-section');
+            const matchedGrid = document.getElementById('matched-files-grid');
+            
+            // Show matched section
+            matchedSection.classList.remove('hidden');
+            
+            // Create matched file display
+            const matchedFileDiv = document.createElement('div');
+            matchedFileDiv.className = 'bg-white border border-green-300 rounded-lg p-3 shadow-sm';
+            matchedFileDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-green-600 font-bold">✅</span>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900 truncate">${fileName}</p>
+                            <p class="text-xs text-green-600">${checklistItem}</p>
+                        </div>
+                    </div>
+                    <button onclick="unmatchFile('${fileName}', '${checklistItem}')" 
+                            class="text-red-500 hover:text-red-700 text-xs">
+                        ✕
+                    </button>
+                </div>
+            `;
+            
+            matchedGrid.appendChild(matchedFileDiv);
+            
+            // Remove from preview
+            fileElement.remove();
+            
+            updateUploadCount();
+        }
+
+        function unmatchFile(fileName, checklistItem) {
+            // Remove from matches
+            delete fileMatches[fileName];
+            
+            // Update button
+            const button = document.querySelector(`[data-checklist="${checklistItem}"]`);
+            if (button) {
+                button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                button.classList.add('bg-red-500', 'hover:bg-red-600');
+                button.innerHTML = `❌ ${checklistItem}`;
+            }
+            
+            // Remove from matched section
+            const matchedGrid = document.getElementById('matched-files-grid');
+            const matchedFiles = matchedGrid.querySelectorAll('div');
+            matchedFiles.forEach(div => {
+                if (div.textContent.includes(fileName)) {
+                    div.remove();
+                }
+            });
+            
+            // Hide matched section if empty
+            if (matchedGrid.children.length === 0) {
+                document.getElementById('matched-files-section').classList.add('hidden');
+            }
+            
+            updateProgress();
+            showStatus(`↩️ Unmatched: ${fileName}`, 'info');
         }
 
         function updateProgress() {
@@ -603,7 +730,7 @@
         }
 
         function updateUploadCount() {
-            const fileElements = document.querySelectorAll('#file-grid > div:not(.text-gray-500)');
+            const fileElements = document.querySelectorAll('#file-grid [data-filename]');
             document.getElementById('uploaded-count').textContent = fileElements.length;
         }
 
@@ -611,6 +738,11 @@
             showStatus('🤖 AI analyzing documents...', 'info');
             
             const fileElements = document.querySelectorAll('#file-grid [data-filename]');
+            if (fileElements.length === 0) {
+                showStatus('❌ No files to match. Please upload some documents first.', 'warning');
+                return;
+            }
+
             const checklistItems = [
                 'Credit Report', 'Income Verification', 'Bank Statements', 
                 'Employment Letter', 'Tax Returns', 'Property Appraisal', 
@@ -624,40 +756,42 @@
                     const fileName = element.getAttribute('data-filename').toLowerCase();
                     let bestMatch = null;
                     
-                    // Simple AI matching logic
-                    if (fileName.includes('credit') || fileName.includes('score')) {
+                    // Enhanced AI matching logic
+                    if (fileName.includes('credit') || fileName.includes('score') || fileName.includes('fico')) {
                         bestMatch = 'Credit Report';
-                    } else if (fileName.includes('income') || fileName.includes('salary') || fileName.includes('pay')) {
+                    } else if (fileName.includes('income') || fileName.includes('salary') || fileName.includes('pay') || fileName.includes('w2') || fileName.includes('paystub')) {
                         bestMatch = 'Income Verification';
-                    } else if (fileName.includes('bank') || fileName.includes('statement')) {
+                    } else if (fileName.includes('bank') || fileName.includes('statement') || fileName.includes('account')) {
                         bestMatch = 'Bank Statements';
-                    } else if (fileName.includes('employment') || fileName.includes('job') || fileName.includes('work')) {
+                    } else if (fileName.includes('employment') || fileName.includes('job') || fileName.includes('work') || fileName.includes('employer')) {
                         bestMatch = 'Employment Letter';
-                    } else if (fileName.includes('tax') || fileName.includes('1040') || fileName.includes('w2')) {
+                    } else if (fileName.includes('tax') || fileName.includes('1040') || fileName.includes('return') || fileName.includes('irs')) {
                         bestMatch = 'Tax Returns';
-                    } else if (fileName.includes('appraisal') || fileName.includes('value') || fileName.includes('property')) {
+                    } else if (fileName.includes('appraisal') || fileName.includes('value') || fileName.includes('property') || fileName.includes('home')) {
                         bestMatch = 'Property Appraisal';
-                    } else if (fileName.includes('insurance') || fileName.includes('policy')) {
+                    } else if (fileName.includes('insurance') || fileName.includes('policy') || fileName.includes('coverage')) {
                         bestMatch = 'Insurance Documents';
-                    } else if (fileName.includes('purchase') || fileName.includes('agreement') || fileName.includes('contract')) {
+                    } else if (fileName.includes('purchase') || fileName.includes('agreement') || fileName.includes('contract') || fileName.includes('sale')) {
                         bestMatch = 'Purchase Agreement';
                     } else {
-                        // Random assignment for demo
+                        // Smart assignment for unmatched files
                         const availableItems = checklistItems.filter(item => {
                             const button = document.querySelector(`[data-checklist="${item}"]`);
                             return button && button.classList.contains('bg-red-500');
                         });
                         if (availableItems.length > 0) {
-                            bestMatch = availableItems[Math.floor(Math.random() * availableItems.length)];
+                            bestMatch = availableItems[0]; // Take first available
                         }
                     }
                     
                     if (bestMatch) {
-                        matchFileToChecklist(element.getAttribute('data-filename'), bestMatch);
-                        matchCount++;
+                        // Check if this item is already matched
+                        const button = document.querySelector(`[data-checklist="${bestMatch}"]`);
+                        if (button && button.classList.contains('bg-red-500')) {
+                            matchFileToChecklist(element.getAttribute('data-filename'), bestMatch);
+                            matchCount++;
+                        }
                     }
-                    
-                    updateProgress();
                     
                     // Show completion message
                     if (index === fileElements.length - 1) {
@@ -669,157 +803,112 @@
             });
         }
 
-        // Organize and Download - Real Google Drive Integration
-        async function organizeAndDownload() {
-            if (!gapiLoaded) {
-                showStatus('Google API is still loading. Please wait...', 'warning');
-                return;
-            }
-
-            if (!isSignedIn) {
-                showStatus('Please connect to Google Drive first.', 'error');
-                return;
-            }
-
-            if (!window.fileMatches || Object.keys(window.fileMatches).length === 0) {
+        // Organize and Download - Local file organization
+        function organizeAndDownload() {
+            if (Object.keys(fileMatches).length === 0) {
                 showStatus('No matched files to organize. Please match some documents first.', 'warning');
                 return;
             }
 
-            showStatus('🚀 Organizing files in Google Drive...', 'info');
+            showStatus('📁 Organizing files for download...', 'info');
 
-            try {
-                // Create a folder for organized loan documents
-                const folderName = `Loan Documents - ${new Date().toLocaleDateString()}`;
-                const folderMetadata = {
-                    name: folderName,
-                    mimeType: 'application/vnd.google-apps.folder'
-                };
+            // Create organized structure
+            const organizationData = {
+                timestamp: new Date().toLocaleString(),
+                totalFiles: Object.keys(fileMatches).length,
+                categories: {},
+                fileList: []
+            };
 
-                const folderResponse = await gapi.client.drive.files.create({
-                    resource: folderMetadata
+            // Group files by category
+            Object.entries(fileMatches).forEach(([fileName, category]) => {
+                if (!organizationData.categories[category]) {
+                    organizationData.categories[category] = [];
+                }
+                organizationData.categories[category].push(fileName);
+                organizationData.fileList.push({
+                    file: fileName,
+                    category: category
                 });
+            });
 
-                const folderId = folderResponse.result.id;
-                showStatus(`📁 Created folder: ${folderName}`, 'success');
+            // Generate detailed organization report
+            const report = `Solvedet Loan Document Organization Report
+Generated: ${organizationData.timestamp}
 
-                // Create subfolders for each document type
-                const documentTypes = [...new Set(Object.values(window.fileMatches))];
-                const subfolders = {};
+📋 ORGANIZATION SUMMARY:
+• Total Files Organized: ${organizationData.totalFiles}
+• Categories Used: ${Object.keys(organizationData.categories).length}
 
-                for (const docType of documentTypes) {
-                    const subfolderMetadata = {
-                        name: docType,
-                        mimeType: 'application/vnd.google-apps.folder',
-                        parents: [folderId]
-                    };
+📂 FILE ORGANIZATION:
+${Object.entries(organizationData.categories).map(([category, files]) => `
+${category}:
+${files.map(file => `  • ${file}`).join('\n')}`).join('\n')}
 
-                    const subfolderResponse = await gapi.client.drive.files.create({
-                        resource: subfolderMetadata
-                    });
+📊 DETAILED FILE LIST:
+${organizationData.fileList.map(item => `• ${item.file} → ${item.category}`).join('\n')}
 
-                    subfolders[docType] = subfolderResponse.result.id;
-                    showStatus(`📂 Created subfolder: ${docType}`, 'info');
-                }
+🎯 LOAN APPLICATION STATUS:
+${Object.keys(organizationData.categories).length === 8 ? 'COMPLETE - All required documents matched!' : 'PENDING - Some documents still needed'}
 
-                // Move matched files to appropriate subfolders
-                let movedCount = 0;
-                for (const [fileName, docType] of Object.entries(window.fileMatches)) {
-                    try {
-                        // Find the file in Google Drive by name
-                        const searchResponse = await gapi.client.drive.files.list({
-                            q: `name='${fileName}'`,
-                            fields: 'files(id, name)'
-                        });
+📝 FOLDER STRUCTURE RECOMMENDATION:
+Create the following folder structure on your computer:
 
-                        if (searchResponse.result.files.length > 0) {
-                            const fileId = searchResponse.result.files[0].id;
-                            const targetFolderId = subfolders[docType];
+Loan Documents - ${new Date().toLocaleDateString()}/
+${Object.keys(organizationData.categories).map(category => `├── ${category}/`).join('\n')}
 
-                            // Move file to subfolder
-                            await gapi.client.drive.files.update({
-                                fileId: fileId,
-                                addParents: targetFolderId,
-                                removeParents: 'root'
-                            });
+📧 NEXT STEPS:
+1. Create the recommended folder structure
+2. Move files to their respective categories
+3. Review completeness checklist
+4. Submit to loan processor
 
-                            movedCount++;
-                            showStatus(`📋 Moved: ${fileName} → ${docType}`, 'success');
-                        }
-                    } catch (moveError) {
-                        console.warn(`Could not move file ${fileName}:`, moveError);
-                        showStatus(`⚠️ Could not move: ${fileName}`, 'warning');
-                    }
-                }
-
-                // Create summary document
-                const summaryContent = `Loan Document Organization Summary
-Generated: ${new Date().toLocaleString()}
-
-Organized Folder: ${folderName}
-Total Files Organized: ${movedCount}
-
-Document Categories:
-${documentTypes.map(type => `• ${type}: ${Object.values(window.fileMatches).filter(t => t === type).length} files`).join('\n')}
-
-File Organization:
-${Object.entries(window.fileMatches).map(([file, type]) => `• ${file} → ${type}`).join('\n')}
-
-This summary was created by Solvedet Loan Document Manager.
+This organization report was generated by Solvedet Loan Document Manager.
+For support: creditops@solvedet.com
 `;
 
-                const summaryBlob = new Blob([summaryContent], { type: 'text/plain' });
-                const summaryMetadata = {
-                    name: `Loan Organization Summary - ${new Date().toLocaleDateString()}.txt`,
-                    parents: [folderId]
-                };
+            // Create and download the organization report
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Loan-Organization-Report-${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
-                const form = new FormData();
-                form.append('metadata', new Blob([JSON.stringify(summaryMetadata)], { type: 'application/json' }));
-                form.append('file', summaryBlob);
+            // Create JSON file with organization data
+            const jsonBlob = new Blob([JSON.stringify(organizationData, null, 2)], { type: 'application/json' });
+            const jsonUrl = URL.createObjectURL(jsonBlob);
+            const jsonA = document.createElement('a');
+            jsonA.href = jsonUrl;
+            jsonA.download = `Loan-Organization-Data-${Date.now()}.json`;
+            document.body.appendChild(jsonA);
+            jsonA.click();
+            document.body.removeChild(jsonA);
+            URL.revokeObjectURL(jsonUrl);
 
-                await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                    method: 'POST',
-                    headers: new Headers({ 'Authorization': `Bearer ${gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token}` }),
-                    body: form
-                });
-
-                // Generate shareable link
-                await gapi.client.drive.permissions.create({
-                    fileId: folderId,
-                    resource: {
-                        role: 'reader',
-                        type: 'anyone'
-                    }
-                });
-
-                const folderLink = `https://drive.google.com/drive/folders/${folderId}`;
-
-                // Show completion message with link
-                const resultDiv = document.getElementById('organization-result');
-                resultDiv.innerHTML = `
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-green-800 mb-4">🎉 Organization Complete!</h3>
-                        <div class="space-y-3">
-                            <p><strong>📁 Folder Created:</strong> ${folderName}</p>
-                            <p><strong>📋 Files Organized:</strong> ${movedCount} documents</p>
-                            <p><strong>📂 Categories:</strong> ${documentTypes.length} types</p>
-                            <div class="mt-4">
-                                <a href="${folderLink}" target="_blank" 
-                                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                                    🚀 Open Organized Folder in Google Drive
-                                </a>
-                            </div>
+            // Show completion message
+            const resultDiv = document.getElementById('organization-result');
+            resultDiv.innerHTML = `
+                <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-green-800 mb-4">🎉 Organization Complete!</h3>
+                    <div class="space-y-3">
+                        <p><strong>📁 Files Organized:</strong> ${organizationData.totalFiles} documents</p>
+                        <p><strong>📂 Categories:</strong> ${Object.keys(organizationData.categories).length} types</p>
+                        <p><strong>📄 Downloaded:</strong> Organization report & data files</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded p-3 mt-4">
+                            <p class="text-sm text-blue-800">
+                                <strong>💡 Pro Tip:</strong> Once Google verification is approved, 
+                                you'll be able to organize files directly in Google Drive!
+                            </p>
                         </div>
                     </div>
-                `;
+                </div>
+            `;
 
-                showStatus(`✅ Successfully organized ${movedCount} files in Google Drive!`, 'success');
-
-            } catch (error) {
-                console.error('Organization error:', error);
-                showStatus(`❌ Error organizing files: ${error.message}`, 'error');
-            }
+            showStatus(`✅ Successfully organized ${organizationData.totalFiles} files! Check your downloads.`, 'success');
         }
 
         function validateDocuments() {
