@@ -368,11 +368,28 @@
             background: rgba(72, 187, 120, 0.1);
             border: 1px solid #48bb78;
             border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 0.85rem;
+            padding: 4px 8px;
+            font-size: 0.8rem;
             color: #22543d;
             font-weight: 600;
             position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 2px;
+        }
+
+        .assigned-files {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .file-count {
+            color: #48bb78;
+            font-weight: bold;
+            font-size: 0.85rem;
         }
 
         .remove-assignment {
@@ -380,11 +397,14 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 0.7rem;
+            width: 16px;
+            height: 16px;
+            font-size: 0.6rem;
             cursor: pointer;
-            margin-left: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
         }
 
         .action-buttons {
@@ -888,7 +908,7 @@
     </div>
 
     <script>
-        // Google Drive API Configuration
+        // Google Drive API Configuration (Optional)
         const CLIENT_ID = '346449855415-8l1ihn224h1tccv57le5bm81qtqcln6n.apps.googleusercontent.com';
         const API_KEY = 'AIzaSyCRlPzpHXYUpswkdZPWKANfU8ID2tId39s';
         const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
@@ -898,6 +918,7 @@
         let gapiInited = false;
         let gisInited = false;
         let isAuthorized = false;
+        let googleApiAvailable = false;
 
         // Document requirements for different company types
         const documentRequirements = {
@@ -997,12 +1018,22 @@
         // State management
         let selectedCompanyType = 'private-limited';
         let uploadedFiles = new Map();
-        let documentAssignments = new Map();
+        let documentAssignments = new Map(); // Maps itemId to array of fileIds
         let checklistItems = [];
 
-        // Google Drive Integration Functions
+        // Google Drive Integration Functions (Optional Feature)
         function gapiLoaded() {
-            gapi.load('client', initializeGapiClient);
+            try {
+                if (typeof gapi === 'undefined') {
+                    console.warn('Google API not available');
+                    disableGoogleDriveIntegration();
+                    return;
+                }
+                gapi.load('client', initializeGapiClient);
+            } catch (error) {
+                console.warn('Error loading GAPI:', error);
+                disableGoogleDriveIntegration();
+            }
         }
 
         async function initializeGapiClient() {
@@ -1012,60 +1043,112 @@
                     discoveryDocs: [DISCOVERY_DOC],
                 });
                 gapiInited = true;
+                googleApiAvailable = true;
                 maybeEnableButtons();
             } catch (error) {
-                console.error('Error initializing GAPI client:', error);
-                showGoogleStatus('Error initializing Google API. Please check your API key.', 'error');
+                console.warn('Error initializing GAPI client:', error);
+                disableGoogleDriveIntegration();
             }
         }
 
         function gisLoaded() {
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: SCOPES,
-                callback: (response) => {
-                    if (response.error) {
-                        console.error('OAuth error:', response.error);
-                        showGoogleStatus('Authentication failed. Please try again.', 'error');
-                        return;
-                    }
-                    isAuthorized = true;
-                    updateAuthUI();
-                    showGoogleStatus('Successfully connected to Google Drive!', 'success');
+            try {
+                if (typeof google === 'undefined') {
+                    console.warn('Google Identity not available');
+                    disableGoogleDriveIntegration();
+                    return;
                 }
-            });
-            gisInited = true;
-            maybeEnableButtons();
+                
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: (response) => {
+                        if (response.error) {
+                            console.error('OAuth error:', response.error);
+                            showGoogleStatus('Authentication failed. Please try again.', 'error');
+                            return;
+                        }
+                        isAuthorized = true;
+                        updateAuthUI();
+                        showGoogleStatus('Successfully connected to Google Drive!', 'success');
+                    }
+                });
+                gisInited = true;
+                googleApiAvailable = true;
+                maybeEnableButtons();
+            } catch (error) {
+                console.warn('Error initializing GIS:', error);
+                disableGoogleDriveIntegration();
+            }
+        }
+
+        function disableGoogleDriveIntegration() {
+            googleApiAvailable = false;
+            const googleDriveButton = document.getElementById('googleDriveButton');
+            const googleAuthSection = document.getElementById('googleAuthSection');
+            
+            if (googleDriveButton) {
+                googleDriveButton.disabled = true;
+                googleDriveButton.innerHTML = '☁️ Google Drive (Unavailable)';
+                googleDriveButton.title = 'Google Drive integration is not available';
+            }
+            
+            if (googleAuthSection) {
+                googleAuthSection.style.display = 'none';
+            }
+            
+            console.info('Google Drive integration disabled - app will work without it');
         }
 
         function maybeEnableButtons() {
-            if (gapiInited && gisInited) {
-                document.getElementById('googleDriveButton').disabled = false;
+            if (googleApiAvailable && gapiInited && gisInited) {
+                const googleDriveButton = document.getElementById('googleDriveButton');
+                if (googleDriveButton) {
+                    googleDriveButton.disabled = false;
+                    googleDriveButton.innerHTML = '☁️ Google Drive';
+                }
             }
         }
 
         function handleAuthClick() {
+            if (!googleApiAvailable) {
+                alert('Google Drive integration is not available. Please use local file upload instead.');
+                return;
+            }
+            
             if (!tokenClient) {
                 showGoogleStatus('Google authentication not initialized.', 'error');
                 return;
             }
             
-            if (gapi.client.getToken() === null) {
-                tokenClient.requestAccessToken({prompt: 'consent'});
-            } else {
-                tokenClient.requestAccessToken({prompt: ''});
+            try {
+                if (gapi.client.getToken() === null) {
+                    tokenClient.requestAccessToken({prompt: 'consent'});
+                } else {
+                    tokenClient.requestAccessToken({prompt: ''});
+                }
+            } catch (error) {
+                console.error('Error during authentication:', error);
+                showGoogleStatus('Authentication failed. Please try again.', 'error');
             }
         }
 
         function handleSignoutClick() {
-            const token = gapi.client.getToken();
-            if (token !== null) {
-                google.accounts.oauth2.revoke(token.access_token);
-                gapi.client.setToken('');
-                isAuthorized = false;
-                updateAuthUI();
-                showGoogleStatus('Disconnected from Google Drive.', 'success');
-                document.getElementById('googleDriveFiles').style.display = 'none';
+            if (!googleApiAvailable) return;
+            
+            try {
+                const token = gapi.client.getToken();
+                if (token !== null) {
+                    google.accounts.oauth2.revoke(token.access_token);
+                    gapi.client.setToken('');
+                    isAuthorized = false;
+                    updateAuthUI();
+                    showGoogleStatus('Disconnected from Google Drive.', 'success');
+                    document.getElementById('googleDriveFiles').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error during signout:', error);
+                showGoogleStatus('Error disconnecting from Google Drive.', 'error');
             }
         }
 
@@ -1098,6 +1181,11 @@
         }
 
         async function openGoogleDrivePicker() {
+            if (!googleApiAvailable) {
+                alert('Google Drive integration is not available.\n\nPlease use:\n• Select Files button\n• Select Folder button\n• Drag & drop files directly');
+                return;
+            }
+            
             if (!isAuthorized) {
                 alert('Please connect your Google account first.');
                 return;
@@ -1105,9 +1193,9 @@
 
             try {
                 const response = await gapi.client.drive.files.list({
-                    pageSize: 50,
-                    fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime)',
-                    q: "(mimeType='application/pdf' or mimeType contains 'image/' or mimeType contains 'document') and trashed=false"
+                    pageSize: 100,
+                    fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime, parents)',
+                    q: "(mimeType='application/pdf' or mimeType contains 'image/' or mimeType contains 'document' or mimeType='application/vnd.google-apps.folder') and trashed=false"
                 });
 
                 const files = response.result.files;
@@ -1134,17 +1222,18 @@
                 fileElement.className = 'drive-file-item';
                 
                 const mimeType = file.mimeType || '';
-                const fileExtension = getFileExtension(file.name, mimeType);
-                const fileSize = file.size ? formatFileSize(file.size) : 'Unknown size';
+                const isFolder = mimeType === 'application/vnd.google-apps.folder';
+                const fileExtension = isFolder ? 'DIR' : getFileExtension(file.name, mimeType);
+                const fileSize = file.size ? formatFileSize(file.size) : (isFolder ? 'Folder' : 'Unknown size');
                 
                 fileElement.innerHTML = `
-                    <div class="drive-file-icon">${fileExtension}</div>
+                    <div class="drive-file-icon" style="${isFolder ? 'background: #ffa500;' : ''}">${fileExtension}</div>
                     <div class="drive-file-info">
                         <div class="drive-file-name">${file.name}</div>
                         <div class="drive-file-details">${fileSize} • ${new Date(file.modifiedTime).toLocaleDateString()}</div>
                     </div>
-                    <button class="drive-select-btn" onclick="downloadGoogleDriveFile('${file.id}', '${file.name}', '${mimeType}')">
-                        Import
+                    <button class="drive-select-btn" onclick="${isFolder ? `importGoogleDriveFolder('${file.id}', '${file.name}')` : `downloadGoogleDriveFile('${file.id}', '${file.name}', '${mimeType}')`}">
+                        ${isFolder ? 'Import Folder' : 'Import'}
                     </button>
                 `;
                 
@@ -1156,16 +1245,20 @@
 
         async function downloadGoogleDriveFile(fileId, fileName, mimeType) {
             try {
-                showGoogleStatus('Downloading file from Google Drive...', 'success');
+                showGoogleStatus('Importing file from Google Drive...', 'success');
                 
                 // For export-able Google Docs formats, use export
                 let downloadUrl;
+                let finalMimeType = mimeType;
+                
                 if (mimeType === 'application/vnd.google-apps.document') {
                     downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`;
-                    fileName = fileName.replace(/\.[^/.]+$/, "") + '.pdf'; // Change extension to PDF
+                    fileName = fileName.replace(/\.[^/.]+$/, "") + '.pdf';
+                    finalMimeType = 'application/pdf';
                 } else if (mimeType === 'application/vnd.google-apps.spreadsheet') {
                     downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`;
                     fileName = fileName.replace(/\.[^/.]+$/, "") + '.pdf';
+                    finalMimeType = 'application/pdf';
                 } else {
                     downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
                 }
@@ -1176,35 +1269,75 @@
                 });
                 
                 // Convert response to blob
-                const blob = new Blob([response.body], { type: mimeType });
+                const blob = new Blob([response.body], { type: finalMimeType });
                 
                 // Create a File object
-                const file = new File([blob], fileName, { type: mimeType });
+                const file = new File([blob], fileName, { type: finalMimeType });
                 
                 // Process the file as if it was uploaded
-                const fileId = `gdrive-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const newFileId = `gdrive-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                 const aiSuggestion = await analyzeDocumentContent(file);
                 
-                uploadedFiles.set(fileId, {
+                uploadedFiles.set(newFileId, {
                     file: file,
                     name: fileName,
                     size: blob.size,
-                    type: mimeType,
+                    type: finalMimeType,
                     aiSuggestion: aiSuggestion,
                     assigned: false,
                     source: 'google-drive'
                 });
                 
-                const fileElement = createFileElement(fileId, file, aiSuggestion);
-                fileElement.querySelector('.file-info').innerHTML += '<br><small style="color: #4285f4;">☁️ From Google Drive</small>';
+                const fileElement = createFileElement(newFileId, file, aiSuggestion);
+                const fileInfo = fileElement.querySelector('.file-info');
+                if (fileInfo) {
+                    fileInfo.innerHTML += '<br><small style="color: #4285f4;">☁️ From Google Drive</small>';
+                }
                 document.getElementById('uploadedFiles').appendChild(fileElement);
                 
                 updateProgress();
                 showGoogleStatus(`Successfully imported ${fileName}`, 'success');
                 
             } catch (error) {
-                console.error('Error downloading file from Google Drive:', error);
-                showGoogleStatus('Error downloading file. Please try again.', 'error');
+                console.error('Error importing file from Google Drive:', error);
+                showGoogleStatus('Error importing file. Please try again.', 'error');
+            }
+        }
+
+        async function importGoogleDriveFolder(folderId, folderName) {
+            try {
+                showGoogleStatus(`Importing folder "${folderName}" from Google Drive...`, 'success');
+                
+                // Get all files in the folder
+                const response = await gapi.client.drive.files.list({
+                    pageSize: 100,
+                    fields: 'files(id, name, mimeType, size, modifiedTime)',
+                    q: `'${folderId}' in parents and trashed=false and (mimeType='application/pdf' or mimeType contains 'image/' or mimeType contains 'document')`
+                });
+
+                const files = response.result.files;
+                if (!files || files.length === 0) {
+                    showGoogleStatus(`No documents found in folder "${folderName}".`, 'error');
+                    return;
+                }
+
+                let importedCount = 0;
+                for (const file of files) {
+                    try {
+                        await downloadGoogleDriveFile(file.id, file.name, file.mimeType);
+                        importedCount++;
+                        // Add small delay to prevent rate limiting
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    } catch (error) {
+                        console.error(`Error importing file ${file.name}:`, error);
+                    }
+                }
+
+                showGoogleStatus(`Successfully imported ${importedCount} files from folder "${folderName}"`, 'success');
+                
+            } catch (error) {
+                console.error('Error importing folder from Google Drive:', error);
+                showGoogleStatus('Error importing folder. Please try again.', 'error');
             }
         }
 
@@ -1228,16 +1361,26 @@
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            setupCompanyTypeSelection();
-            setupDragAndDrop();
-            generateChecklist(); // Start with private-limited selected
+            console.log('🚀 Initializing Loan Document Management System...');
             
-            // Load Google APIs
-            if (typeof gapi !== 'undefined') {
-                gapiLoaded();
-            }
-            if (typeof google !== 'undefined') {
-                gisLoaded();
+            try {
+                setupCompanyTypeSelection();
+                setupDragAndDrop();
+                generateChecklist(); // Start with private-limited selected
+                
+                console.log('✅ Core functionality initialized');
+                
+                // Google Drive integration is optional - don't block app startup
+                setTimeout(() => {
+                    if (!googleApiAvailable) {
+                        console.info('ℹ️ Google Drive integration not available - app running in local mode');
+                        disableGoogleDriveIntegration();
+                    }
+                }, 3000); // Give APIs 3 seconds to load
+                
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                alert('There was an error starting the application. Please refresh the page.');
             }
         });
 
@@ -1302,7 +1445,9 @@
             
             // Clear previous content
             checklistContent.innerHTML = '';
-            documentAssignments.clear();
+            
+            // Reset document assignments - ensure it's properly initialized
+            documentAssignments = new Map();
             checklistItems = [];
             
             // Generate checklist HTML
@@ -1325,10 +1470,9 @@
                     htmlContent += `
                         <div class="checklist-item" data-item-id="${itemId}" ondrop="handleDrop(event)" ondragover="allowDrop(event)">
                             <div class="status-indicator" id="status-${itemId}">✗</div>
-                            <div class="checklist-label">${document}</div>
-                            <div class="assigned-file" id="assigned-${itemId}" style="display: none;">
-                                <span class="file-name"></span>
-                                <button class="remove-assignment" onclick="removeAssignment('${itemId}')">×</button>
+                            <div class="checklist-label">${document} <span class="file-count" id="count-${itemId}" style="color: #48bb78; font-weight: bold;">(0 files)</span></div>
+                            <div class="assigned-files" id="assigned-${itemId}" style="display: none; flex-wrap: wrap; gap: 5px; margin-top: 8px;">
+                                <!-- Multiple assigned files will appear here -->
                             </div>
                         </div>
                     `;
@@ -1499,38 +1643,50 @@
             const file = uploadedFiles.get(fileId);
             const item = checklistItems.find(item => item.id === itemId);
             
-            if (!file || !item) return;
+            if (!file || !item || file.assigned) return;
             
-            // Remove any existing assignment for this checklist item
-            for (const [existingFileId, existingFile] of uploadedFiles.entries()) {
-                if (existingFile.assignedTo === itemId) {
-                    existingFile.assigned = false;
-                    existingFile.assignedTo = null;
-                    // Show the previously assigned file back in preview
-                    const previousFileElement = document.querySelector(`[data-file-id="${existingFileId}"]`);
-                    if (previousFileElement) {
-                        previousFileElement.classList.remove('assigned');
-                        previousFileElement.style.display = 'flex';
-                    }
-                }
+            // Initialize assignment array if it doesn't exist
+            if (!documentAssignments.has(itemId)) {
+                documentAssignments.set(itemId, []);
             }
             
-            // Assign new file
+            // Add file to assignment array
+            const assignedFiles = documentAssignments.get(itemId);
+            assignedFiles.push(fileId);
+            
+            // Mark file as assigned
             file.assigned = true;
             file.assignedTo = itemId;
             item.assigned = true;
             
             // Update UI
             const statusIndicator = document.getElementById(`status-${itemId}`);
-            const assignedFileDiv = document.getElementById(`assigned-${itemId}`);
+            const assignedFilesDiv = document.getElementById(`assigned-${itemId}`);
+            const fileCountSpan = document.getElementById(`count-${itemId}`);
             
-            statusIndicator.textContent = '✓';
-            statusIndicator.classList.add('completed');
+            if (statusIndicator) {
+                statusIndicator.textContent = '✓';
+                statusIndicator.classList.add('completed');
+            }
             
-            assignedFileDiv.style.display = 'block';
-            assignedFileDiv.querySelector('.file-name').textContent = file.name;
+            if (assignedFilesDiv) {
+                // Create file tag
+                const fileTag = document.createElement('div');
+                fileTag.className = 'assigned-file';
+                fileTag.id = `file-tag-${fileId}`;
+                fileTag.innerHTML = `
+                    <span class="file-name">${file.name}</span>
+                    <button class="remove-assignment" onclick="removeSingleAssignment('${itemId}', '${fileId}')">×</button>
+                `;
+                
+                assignedFilesDiv.appendChild(fileTag);
+                assignedFilesDiv.style.display = 'flex';
+            }
             
-            documentAssignments.set(itemId, fileId);
+            // Update file count
+            if (fileCountSpan) {
+                fileCountSpan.textContent = `(${assignedFiles.length} files)`;
+            }
             
             // Hide the file from uploaded files section
             const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
@@ -1542,49 +1698,101 @@
             updateProgress();
         }
 
-        function removeAssignment(itemId) {
-            const fileId = documentAssignments.get(itemId);
-            if (fileId) {
-                const file = uploadedFiles.get(fileId);
-                const item = checklistItems.find(item => item.id === itemId);
-                
-                if (file) {
-                    file.assigned = false;
-                    file.assignedTo = null;
+        function removeSingleAssignment(itemId, fileId) {
+            const assignedFiles = documentAssignments.get(itemId);
+            if (!assignedFiles) return;
+            
+            // Remove fileId from the array
+            const fileIndex = assignedFiles.indexOf(fileId);
+            if (fileIndex > -1) {
+                assignedFiles.splice(fileIndex, 1);
+            }
+            
+            const file = uploadedFiles.get(fileId);
+            const item = checklistItems.find(item => item.id === itemId);
+            
+            if (file) {
+                file.assigned = false;
+                file.assignedTo = null;
+            }
+            
+            // Update UI
+            const fileTag = document.getElementById(`file-tag-${fileId}`);
+            if (fileTag) {
+                fileTag.remove();
+            }
+            
+            const fileCountSpan = document.getElementById(`count-${itemId}`);
+            const assignedFilesDiv = document.getElementById(`assigned-${itemId}`);
+            
+            // Update file count
+            if (fileCountSpan) {
+                fileCountSpan.textContent = `(${assignedFiles.length} files)`;
+            }
+            
+            // If no files left, update status
+            if (assignedFiles.length === 0) {
+                const statusIndicator = document.getElementById(`status-${itemId}`);
+                if (statusIndicator) {
+                    statusIndicator.textContent = '✗';
+                    statusIndicator.classList.remove('completed');
                 }
-                
+                if (assignedFilesDiv) {
+                    assignedFilesDiv.style.display = 'none';
+                }
                 if (item) {
                     item.assigned = false;
                 }
-                
-                const statusIndicator = document.getElementById(`status-${itemId}`);
-                const assignedFileDiv = document.getElementById(`assigned-${itemId}`);
-                
-                statusIndicator.textContent = '✗';
-                statusIndicator.classList.remove('completed');
-                assignedFileDiv.style.display = 'none';
-                
-                // Show the file back in uploaded files section
-                const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
-                if (fileElement) {
-                    fileElement.classList.remove('assigned');
-                    fileElement.style.display = 'flex';
-                }
-                
                 documentAssignments.delete(itemId);
-                updateProgress();
             }
+            
+            // Show the file back in uploaded files section
+            const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
+            if (fileElement) {
+                fileElement.classList.remove('assigned');
+                fileElement.style.display = 'flex';
+            }
+            
+            updateProgress();
+        }
+
+        function removeAssignment(itemId) {
+            // Remove all assignments for this item (for backwards compatibility)
+            const assignedFiles = documentAssignments.get(itemId);
+            if (!assignedFiles || assignedFiles.length === 0) return;
+            
+            // Remove all files from this checklist item
+            const filesToRemove = [...assignedFiles]; // Create a copy to avoid modification during iteration
+            filesToRemove.forEach(fileId => {
+                removeSingleAssignment(itemId, fileId);
+            });
         }
 
         function updateProgress() {
-            const uploadedCount = uploadedFiles.size;
-            const matchedCount = documentAssignments.size;
-            const totalRequired = checklistItems.length;
-            const pendingCount = totalRequired - matchedCount;
-            
-            document.getElementById('uploadedCount').textContent = uploadedCount;
-            document.getElementById('matchedCount').textContent = matchedCount;
-            document.getElementById('pendingCount').textContent = pendingCount;
+            try {
+                const uploadedCount = uploadedFiles.size;
+                let totalMatchedFiles = 0;
+                
+                // Count total matched files across all checklist items
+                for (const [itemId, fileIds] of documentAssignments.entries()) {
+                    if (Array.isArray(fileIds)) {
+                        totalMatchedFiles += fileIds.length;
+                    }
+                }
+                
+                const totalRequired = checklistItems.length;
+                const pendingCount = checklistItems.filter(item => !item.assigned).length;
+                
+                const uploadedCountEl = document.getElementById('uploadedCount');
+                const matchedCountEl = document.getElementById('matchedCount');
+                const pendingCountEl = document.getElementById('pendingCount');
+                
+                if (uploadedCountEl) uploadedCountEl.textContent = uploadedCount;
+                if (matchedCountEl) matchedCountEl.textContent = totalMatchedFiles;
+                if (pendingCountEl) pendingCountEl.textContent = pendingCount;
+            } catch (error) {
+                console.warn('Error updating progress:', error);
+            }
         }
 
         function autoMatchDocuments() {
@@ -1714,11 +1922,14 @@ Loan Processing Team`;
             const bankRMEmail = document.getElementById('bankRMEmail').value || 'rm@bank.com';
             
             const assignedDocs = [];
-            for (const [itemId, fileId] of documentAssignments.entries()) {
+            for (const [itemId, fileIds] of documentAssignments.entries()) {
                 const item = checklistItems.find(i => i.id === itemId);
-                const file = uploadedFiles.get(fileId);
-                if (item && file) {
-                    assignedDocs.push(`${item.document} (${file.name})`);
+                if (item && fileIds.length > 0) {
+                    const fileNames = fileIds.map(fileId => {
+                        const file = uploadedFiles.get(fileId);
+                        return file ? file.name : 'Unknown file';
+                    });
+                    assignedDocs.push(`${item.document} (${fileNames.join(', ')})`);
                 }
             }
             
@@ -1775,41 +1986,44 @@ ${document.getElementById('solvedetRM').value || 'Solvedet RM'}`;
                 const documentsByCategory = new Map();
                 const renamedFiles = [];
                 
-                for (const [itemId, fileId] of documentAssignments.entries()) {
+                for (const [itemId, fileIds] of documentAssignments.entries()) {
                     const item = checklistItems.find(i => i.id === itemId);
-                    const file = uploadedFiles.get(fileId);
                     
-                    console.log(`Processing: ${itemId} -> ${fileId}`, item, file);
-                    
-                    if (item && file) {
+                    if (item && fileIds.length > 0) {
                         const category = item.category.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
                         if (!documentsByCategory.has(category)) {
                             documentsByCategory.set(category, []);
                         }
                         
-                        // Generate new filename
-                        const fileExtension = file.name.split('.').pop().toLowerCase();
-                        const documentType = item.document.toLowerCase()
-                            .replace(/[^a-z0-9\s]/g, '')
-                            .replace(/\s+/g, '_')
-                            .replace(/_{2,}/g, '_')
-                            .substring(0, 40);
-                        const sanitizedCustomer = customerName.replace(/[^a-zA-Z0-9]/g, '_');
-                        const newFileName = `${documentType}_${sanitizedCustomer}.${fileExtension}`;
-                        
-                        documentsByCategory.get(category).push({
-                            originalName: file.name,
-                            newName: newFileName,
-                            document: item.document,
-                            path: file.webkitRelativePath || file.name,
-                            fileId: fileId,
-                            itemId: itemId
-                        });
-                        
-                        renamedFiles.push({
-                            originalFile: file.file,
-                            newName: newFileName,
-                            category: category
+                        fileIds.forEach((fileId, index) => {
+                            const file = uploadedFiles.get(fileId);
+                            if (file) {
+                                // Generate new filename
+                                const fileExtension = file.name.split('.').pop().toLowerCase();
+                                const documentType = item.document.toLowerCase()
+                                    .replace(/[^a-z0-9\s]/g, '')
+                                    .replace(/\s+/g, '_')
+                                    .replace(/_{2,}/g, '_')
+                                    .substring(0, 40);
+                                const sanitizedCustomer = customerName.replace(/[^a-zA-Z0-9]/g, '_');
+                                const fileNumber = fileIds.length > 1 ? `_${index + 1}` : '';
+                                const newFileName = `${documentType}_${sanitizedCustomer}${fileNumber}.${fileExtension}`;
+                                
+                                documentsByCategory.get(category).push({
+                                    originalName: file.name,
+                                    newName: newFileName,
+                                    document: item.document,
+                                    path: file.webkitRelativePath || file.name,
+                                    fileId: fileId,
+                                    itemId: itemId
+                                });
+                                
+                                renamedFiles.push({
+                                    originalFile: file.file,
+                                    newName: newFileName,
+                                    category: category
+                                });
+                            }
                         });
                     }
                 }
@@ -1889,9 +2103,14 @@ ${document.getElementById('solvedetRM').value || 'Solvedet RM'}`;
                 }
                 
                 // Statistics
+                let totalMatchedFiles = 0;
+                for (const [itemId, fileIds] of documentAssignments.entries()) {
+                    totalMatchedFiles += fileIds.length;
+                }
+                
                 summary += `📊 COMPLETION STATISTICS:\n`;
                 summary += `=========================\n`;
-                summary += `✅ Documents Matched: ${documentAssignments.size}\n`;
+                summary += `✅ Documents Matched: ${totalMatchedFiles} files\n`;
                 summary += `❌ Documents Missing: ${missingDocs.length}\n`;
                 summary += `📋 Total Required: ${checklistItems.length}\n`;
                 const completionPercentage = Math.round((documentAssignments.size / checklistItems.length) * 100);
@@ -1927,9 +2146,14 @@ ${document.getElementById('solvedetRM').value || 'Solvedet RM'}`;
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
                 
                 // Show success message with details
+                let totalMatchedFiles = 0;
+                for (const [itemId, fileIds] of documentAssignments.entries()) {
+                    totalMatchedFiles += fileIds.length;
+                }
+                
                 const successMessage = `📁 Document Organization Complete!\n\n` +
                       `📊 Summary:\n` +
-                      `• ✅ Downloaded: ${documentAssignments.size} organized files\n` +
+                      `• ✅ Downloaded: ${totalMatchedFiles} organized files\n` +
                       `• ❌ Missing: ${missingDocs.length} documents\n` +
                       `• 📈 Completion: ${completionPercentage}%\n` +
                       `• 📁 Categories: ${documentsByCategory.size}\n\n` +
@@ -2093,13 +2317,80 @@ ${document.getElementById('solvedetRM').value || 'Solvedet RM'}`;
             });
         });
 
-        // Load Google APIs when they become available
-        window.gapiLoaded = gapiLoaded;
-        window.gisLoaded = gisLoaded;
+        // Optional Google API Integration
+        window.gapiLoaded = function() {
+            console.log('📥 Google API loaded');
+            gapiLoaded();
+        };
+        
+        window.gisLoaded = function() {
+            console.log('🔐 Google Identity loaded');
+            gisLoaded();
+        };
+        
+        // Graceful error handling - don't let Google API errors break the app
+        window.addEventListener('error', function(e) {
+            if (e.message === 'Script error.' || 
+                (e.filename && (e.filename.includes('googleapis') || e.filename.includes('gsi')))) {
+                console.warn('⚠️ Google API loading issue detected - disabling Google Drive integration');
+                disableGoogleDriveIntegration();
+                e.preventDefault(); // Prevent the error from bubbling up
+                return true;
+            }
+        });
+        
+        // Additional safety check
+        window.addEventListener('unhandledrejection', function(e) {
+            if (e.reason && e.reason.toString().includes('gapi')) {
+                console.warn('⚠️ Google API promise rejection - disabling Google Drive integration');
+                disableGoogleDriveIntegration();
+                e.preventDefault();
+            }
+        });
     </script>
     
-    <!-- Load Google APIs -->
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    <!-- Optional Google APIs - won't block app if they fail -->
+    <script>
+        // Load Google APIs with timeout protection
+        function loadGoogleAPI() {
+            const script = document.createElement('script');
+            script.src = 'https://apis.google.com/js/api.js';
+            script.async = true;
+            script.defer = true;
+            script.onload = function() {
+                if (typeof window.gapiLoaded === 'function') {
+                    window.gapiLoaded();
+                }
+            };
+            script.onerror = function() {
+                console.warn('📛 Failed to load Google Drive API - continuing without it');
+                disableGoogleDriveIntegration();
+            };
+            document.head.appendChild(script);
+        }
+        
+        function loadGoogleIdentity() {
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = function() {
+                if (typeof window.gisLoaded === 'function') {
+                    window.gisLoaded();
+                }
+            };
+            script.onerror = function() {
+                console.warn('📛 Failed to load Google Identity - continuing without it');
+                disableGoogleDriveIntegration();
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Load Google APIs after a short delay to not block main app
+        setTimeout(() => {
+            loadGoogleAPI();
+            loadGoogleIdentity();
+        }, 1000);
+    </script>
 </body>
 </html>
